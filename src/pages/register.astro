@@ -1,0 +1,18 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SiteHeader } from '../components/layout/SiteHeader';
+import { RegisterForm } from '../components/auth/RegisterForm';
+---
+
+<Layout title="Crear cuenta — Deck Builder">
+  <SiteHeader client:load />
+  <main class="mx-auto flex max-w-md flex-col gap-6 px-4 py-16">
+    <div class="flex flex-col gap-1">
+      <h1 class="text-2xl font-bold text-white">Crear cuenta</h1>
+      <p class="text-sm text-slate-400">
+        ¿Ya tenés cuenta? <a href="/login" class="text-indigo-400 hover:underline">Ingresá acá</a>
+      </p>
+    </div>
+    <RegisterForm client:load />
+  </main>
+</Layout>

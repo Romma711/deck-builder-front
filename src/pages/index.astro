@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SiteHeader } from '../components/layout/SiteHeader';
+---
+
+<Layout>
+  <SiteHeader client:load />
+  <main class="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-20">
+    <section class="flex flex-col items-start gap-4">
+      <h1 class="text-4xl font-bold text-white">
+        Construí tus mazos multi&#8209;TCG
+      </h1>
+      <p class="max-w-xl text-slate-400">
+        Magic, Pokémon, Yu-Gi-Oh! y más en un solo lugar. Creá tu cuenta, armá tus mazos con
+        validación de formato y compartilos con la comunidad.
+      </p>
+      <div class="flex gap-3">
+        <a
+          href="/register"
+          class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+        >
+          Crear cuenta
+        </a>
+        <a
+          href="/login"
+          class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-700"
+        >
+          Iniciar sesión
+        </a>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <h2 class="font-semibold text-slate-100">Validación de formatos</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Cada mazo se valida contra las reglas de su formato antes de guardarse.
+        </p>
+      </div>
+      <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <h2 class="font-semibold text-slate-100">Tu colección de mazos</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Un dashboard con todos tus mazos, personales y de tus organizaciones.
+        </p>
+      </div>
+      <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <h2 class="font-semibold text-slate-100">Comunidad</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Buscá mazos públicos de otros jugadores y copialos a tu cuenta.
+        </p>
+      </div>
+    </section>
+  </main>
+</Layout>
