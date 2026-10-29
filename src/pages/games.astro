@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SiteHeader } from '../components/layout/SiteHeader';
+import { GamesCatalog } from '../components/catalog/GamesCatalog';
+---
+
+<Layout title="Juegos y formatos — Deck Builder">
+  <SiteHeader client:load />
+  <main class="mx-auto max-w-5xl px-4 py-16">
+    <div class="mb-8 flex flex-col gap-2">
+      <h1 class="text-2xl font-bold text-white">Juegos y formatos</h1>
+      <p class="text-sm text-slate-400">
+        Cada juego tiene sus propios formatos y reglas. El backend valida los mazos contra estas
+        reglas al guardarlos.
+      </p>
+    </div>
+    <GamesCatalog client:load />
+  </main>
+</Layout>

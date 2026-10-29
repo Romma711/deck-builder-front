@@ -23,6 +23,9 @@ export function SiteHeader() {
           🃏 Deck Builder
         </a>
         <div className="flex items-center gap-1">
+          <a href="/games" className={linkClass('/games')}>
+            Juegos
+          </a>
           <a href="/search" className={linkClass('/search')}>
             Buscar mazos
           </a>

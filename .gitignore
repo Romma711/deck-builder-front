@@ -25,3 +25,5 @@ pnpm-debug.log*
 .idea/
 
 openapi.yaml
+
+PLAN.md
