@@ -10,16 +10,21 @@
  * La carta resultante SIEMPRE se guarda pasando por el backend, que valida
  * los attributes con su GameSpec.
  *
- * Política de uso: rate limit público de Scryfall = 10 req/s; se respeta con
- * un límite de peticiones por ventana y caché para no castigar su API.
- * https://scryfall.com/docs/api — incluir identificación en User-Agent.
+ * Política de uso (https://scryfall.com/docs/api): como máximo ~10 req/s
+ * (50–100 ms entre peticiones) y cachear resultados. Se respeta con un
+ * espaciado mínimo entre peticiones y una caché en memoria.
+ *
+ * No se envían headers custom (User-Agent, etc.): desde el navegador el
+ * User-Agent no se puede sobrescribir y cualquier header extra fuerza un
+ * preflight CORS innecesario.
  */
 
 export interface ScryfallCard {
   id: string;
   name: string;
   mana_cost?: string;
-  mana_value?: number;
+  /** Valor de maná convertido (en la API de Scryfall se llama `cmc`) */
+  cmc?: number;
   type_line?: string;
   oracle_text?: string;
   power?: string;
@@ -42,35 +47,59 @@ export interface ScryfallCard {
 
 const SCRYFALL_BASE = 'https://api.scryfall.com';
 
-// --- Rate limiting (10 req/s público): ventana deslizante simple -----------
+// --- Rate limiting: espaciado mínimo entre peticiones -----------------------
 
-const MAX_REQUESTS_PER_SECOND = 8; // margen de seguridad bajo el límite de 10
-const WINDOW_MS = 1000;
-let requestTimestamps: number[] = [];
+const MIN_INTERVAL_MS = 100; // ≤ 10 req/s, dentro de lo que pide Scryfall
+let nextSlotAt = 0;
 
-async function throttle(): Promise<void> {
+/**
+ * Reserva el próximo turno de forma SÍNCRONA (sin carreras entre llamadas
+ * concurrentes) y espera hasta que llegue.
+ */
+function throttle(): Promise<void> {
   const now = Date.now();
-  requestTimestamps = requestTimestamps.filter((t) => now - t < WINDOW_MS);
-  if (requestTimestamps.length >= MAX_REQUESTS_PER_SECOND) {
-    const waitMs = WINDOW_MS - (now - requestTimestamps[0]);
-    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
-  }
-  requestTimestamps.push(Date.now());
+  const slot = Math.max(now, nextSlotAt);
+  nextSlotAt = slot + MIN_INTERVAL_MS;
+  const waitMs = slot - now;
+  return waitMs > 0 ? new Promise((resolve) => setTimeout(resolve, waitMs)) : Promise.resolve();
 }
 
-async function scryfallGet<T>(path: string): Promise<T> {
-  await throttle();
-  const response = await fetch(`${SCRYFALL_BASE}${path}`, {
-    headers: {
-      Accept: 'application/json',
-      // Scryfall pide identificación en el User-Agent.
-      'User-Agent': 'DeckBuilderFront/0.1 (contacto: https://github.com/tu-usuario/deck-builder-front)',
-    },
+// --- Caché en memoria (LRU simple con TTL) ----------------------------------
+
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 200;
+const cache = new Map<string, { expiresAt: number; value: Promise<unknown> }>();
+
+function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = cache.get(key);
+  if (hit && hit.expiresAt > Date.now()) {
+    // Re-insertar para mantener el orden LRU.
+    cache.delete(key);
+    cache.set(key, hit);
+    return hit.value as Promise<T>;
+  }
+  const value = load();
+  cache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, value });
+  // No cachear fallos transitorios (los "no encontrada" sí: son respuestas válidas).
+  value.catch((error) => {
+    if (!(error instanceof ScryfallNotFound)) cache.delete(key);
   });
-  // 404 de Scryfall = "no encontrada", no es un error de red.
-  if (response.status === 404) throw new ScryfallNotFound();
-  if (!response.ok) throw new Error(`Scryfall HTTP ${response.status}`);
-  return (await response.json()) as T;
+  if (cache.size > CACHE_MAX_ENTRIES) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  return value;
+}
+
+function scryfallGet<T>(path: string): Promise<T> {
+  return cached(path, async () => {
+    await throttle();
+    const response = await fetch(`${SCRYFALL_BASE}${path}`, { headers: { Accept: 'application/json' } });
+    // 404 de Scryfall = "no encontrada", no es un error de red.
+    if (response.status === 404) throw new ScryfallNotFound();
+    if (!response.ok) throw new Error(`Scryfall HTTP ${response.status}`);
+    return (await response.json()) as T;
+  });
 }
 
 export class ScryfallNotFound extends Error {
@@ -120,7 +149,7 @@ export function scryfallToCardInput(card: ScryfallCard): {
     image: card.image_uris?.normal ?? card.image_uris?.large ?? face?.image_uris?.normal ?? '',
     attributes: {
       mana_cost: card.mana_cost ?? face?.mana_cost,
-      mana_value: card.mana_value,
+      mana_value: card.cmc,
       type: card.type_line ?? face?.type_line,
       oracle_text: card.oracle_text ?? face?.oracle_text,
       power: card.power ?? face?.power,

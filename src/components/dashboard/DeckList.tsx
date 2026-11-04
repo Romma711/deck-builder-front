@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { authApi, decksApi } from '../../lib/api';
-import { errorTitle, errorMessage } from '../../lib/forms/errors';
+import { describeError, type ErrorDescription } from '../../lib/forms/errors';
 import type { Deck } from '../../types/api';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
@@ -11,7 +11,7 @@ import { Button } from '../ui/Button';
  */
 export function DeckList() {
   const [decks, setDecks] = useState<Deck[] | null>(null);
-  const [error, setError] = useState<{ title: string; message?: string } | null>(null);
+  const [error, setError] = useState<ErrorDescription | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -20,7 +20,7 @@ export function DeckList() {
       setDecks(data);
       setError(null);
     } catch (err) {
-      setError({ title: errorTitle(err), message: errorMessage(err) });
+      setError(describeError(err));
       setDecks([]);
     }
   }, []);

@@ -4,26 +4,26 @@
 
 import type { LoginInput, RegisterInput, TokenPair, UpdateMeInput, User } from '../../types/api';
 import { request } from './client';
-import { clearSession, setSession } from '../session/session';
+import { clearSession, getStoredRefreshToken, setSession } from '../session/session';
 
 /** POST /auth/register — 201 User */
 export function register(input: RegisterInput): Promise<User> {
-  return request<User>('/auth/register', { method: 'POST', body: input });
+  return request<User>('/auth/register', { method: 'POST', body: input, auth: 'none' });
 }
 
 /** POST /auth/login — 200 TokenPair (persiste la sesión) */
 export async function login(input: LoginInput): Promise<TokenPair> {
-  const tokens = await request<TokenPair>('/auth/login', { method: 'POST', body: input });
+  const tokens = await request<TokenPair>('/auth/login', { method: 'POST', body: input, auth: 'none' });
   setSession(tokens);
   return tokens;
 }
 
 /** POST /auth/logout — 204. Revoca el refresh token (idempotente) y limpia la sesión local. */
 export async function logout(): Promise<void> {
-  if (typeof localStorage !== 'undefined') {
-    const refresh_token = localStorage.getItem('deckbuilder.refresh_token');
+  const refresh_token = getStoredRefreshToken();
+  if (refresh_token) {
     try {
-      await request<void>('/auth/logout', { method: 'POST', body: refresh_token ? { refresh_token } : {} });
+      await request<void>('/auth/logout', { method: 'POST', body: { refresh_token }, auth: 'none' });
     } catch {
       // Logout idempotente: aunque falle la revocación remota, la sesión local muere.
     }

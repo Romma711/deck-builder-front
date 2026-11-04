@@ -2,9 +2,9 @@
  * Servicios de mazos (tag `decks`).
  *
  * Notas del backend:
- * - `GET /decks` y `GET /decks/{id} son públicos; con token se agregan los
+ * - `GET /decks` y `GET /decks/{id}` son públicos; con token se agregan los
  *   privados propios y los de las orgs del usuario (RLS). Por eso usan
- *   `withAuthIfPresent`.
+ *   `auth: 'optional'`.
  * - No hay endpoint de duplicar: se compone con GET + POST.
  * - La validación de formato la hace el backend (GameSpec) al guardar.
  */
@@ -24,7 +24,7 @@ export type DecksQuery = {
 
 /** GET /decks — mazos visibles (públicos; con sesión, también los propios y de orgs) */
 export function listDecks(query: DecksQuery = {}): Promise<{ data: Deck[]; meta?: ListMeta }> {
-  return request<{ data: Deck[]; meta?: ListMeta }>('/decks', { withAuthIfPresent: true }, query);
+  return request<{ data: Deck[]; meta?: ListMeta }>('/decks', { auth: 'optional' }, query);
 }
 
 /** POST /decks — crear mazo (personal u org; el back valida contra el GameSpec) */
@@ -34,7 +34,7 @@ export function createDeck(input: DeckInput): Promise<Deck> {
 
 /** GET /decks/{id} — detalle (privado ajeno → 404) */
 export function getDeck(id: string): Promise<Deck> {
-  return request<Deck>(`/decks/${encodeURIComponent(id)}`, { withAuthIfPresent: true });
+  return request<Deck>(`/decks/${encodeURIComponent(id)}`, { auth: 'optional' });
 }
 
 /** PUT /decks/{id} — reemplazo completo (solo el dueño) */
@@ -47,17 +47,31 @@ export function deleteDeck(id: string): Promise<void> {
   return request<void>(`/decks/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
-/** Compone un duplicado en el cliente (el back no tiene endpoint de duplicar). */
-export async function duplicateDeck(id: string, name?: string): Promise<Deck> {
+export interface DuplicateOptions {
+  /** Nombre de la copia (por defecto "<original> (copia)") */
+  name?: string;
+  /** Org destino; por defecto la copia es personal */
+  orgId?: string;
+  /** Visibilidad de la copia; por defecto la del original */
+  private?: boolean;
+}
+
+/**
+ * Compone un duplicado en el cliente (el back no tiene endpoint de duplicar).
+ *
+ * La copia NO hereda la org del original: copiar un mazo ajeno de una org de
+ * la que no sos miembro daría 403. Para crearla en una org, pasá `orgId`.
+ */
+export async function duplicateDeck(id: string, options: DuplicateOptions = {}): Promise<Deck> {
   const source = await getDeck(id);
   const input: DeckInput = {
-    name: name ?? `${source.name} (copia)`.slice(0, 50),
+    name: options.name ?? `${source.name} (copia)`.slice(0, 50),
     description: source.description,
     deck_size: source.deck_size,
     game: source.game,
     format: source.format,
-    org_id: source.org_id ?? undefined,
-    private: source.private,
+    org_id: options.orgId,
+    private: options.private ?? source.private,
     leader: source.leader ? cardToInput(source.leader) : undefined,
     partner: source.partner ? cardToInput(source.partner) : undefined,
     cards: (source.cards ?? []).map((entry) => ({

@@ -4,10 +4,10 @@
  */
 
 import { useEffect, useSyncExternalStore } from 'react';
-import { getCatalogState, loadCatalog, subscribeCatalog } from './catalog';
+import { getCatalogState, getServerCatalogState, loadCatalog, subscribeCatalog } from './catalog';
 
 export function useCatalog() {
-  const state = useSyncExternalStore(subscribeCatalog, getCatalogState, getCatalogState);
+  const state = useSyncExternalStore(subscribeCatalog, getCatalogState, getServerCatalogState);
 
   useEffect(() => {
     if (state.status === 'idle') void loadCatalog();

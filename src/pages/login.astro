@@ -1,15 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { SiteHeader } from '../components/layout/SiteHeader';
 import { LoginForm } from '../components/auth/LoginForm';
-
-// `next` permite volver a la página que intentaba acceder tras el guard.
-const next = Astro.url.searchParams.get('next');
-const redirectTo = next && next.startsWith('/') ? next : '/dashboard';
+// La página es estática: `?next=` se lee en el cliente (LoginForm).
 ---
 
 <Layout title="Iniciar sesión — Deck Builder">
-  <SiteHeader client:load />
   <main class="mx-auto flex max-w-md flex-col gap-6 px-4 py-16">
     <div class="flex flex-col gap-1">
       <h1 class="text-2xl font-bold text-white">Iniciar sesión</h1>
@@ -17,6 +12,6 @@ const redirectTo = next && next.startsWith('/') ? next : '/dashboard';
         ¿No tenés cuenta? <a href="/register" class="text-indigo-400 hover:underline">Creala acá</a>
       </p>
     </div>
-    <LoginForm client:load redirectTo={redirectTo} />
+    <LoginForm client:load />
   </main>
 </Layout>

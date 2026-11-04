@@ -40,6 +40,11 @@ export function getCatalogState(): CatalogState {
   return state;
 }
 
+/** Snapshot para SSR e hidratación: el servidor nunca tiene el catálogo cargado. */
+export function getServerCatalogState(): CatalogState {
+  return initialState;
+}
+
 export function subscribeCatalog(listener: () => void): () => void {
   listeners.add(listener);
   listener();

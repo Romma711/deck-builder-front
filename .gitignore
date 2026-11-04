@@ -13,17 +13,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment variables
+# environment variables (.env.example sí se versiona como plantilla)
 .env
-.env.production
-.env.example
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store
 
 # jetbrains setting folder
 .idea/
-
-openapi.yaml
-
-PLAN.md

@@ -8,9 +8,14 @@ export interface LoginValues {
   password: string;
 }
 
-export interface RegisterValues extends LoginValues {
+export interface ProfileValues {
+  username: string;
   email: string;
 }
+
+export interface RegisterValues extends LoginValues, ProfileValues {}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateLogin(values: LoginValues): Partial<Record<keyof LoginValues, string>> {
   const errors: Partial<Record<keyof LoginValues, string>> = {};
@@ -19,14 +24,19 @@ export function validateLogin(values: LoginValues): Partial<Record<keyof LoginVa
   return errors;
 }
 
-export function validateRegister(values: RegisterValues): Partial<Record<keyof RegisterValues, string>> {
-  const errors: Partial<Record<keyof RegisterValues, string>> = {};
+/** Username + email: compartido por registro y edición de perfil (PUT /me). */
+export function validateProfile(values: ProfileValues): Partial<Record<keyof ProfileValues, string>> {
+  const errors: Partial<Record<keyof ProfileValues, string>> = {};
   const username = values.username.trim();
   if (username.length < 3) errors.username = 'El usuario debe tener al menos 3 caracteres';
   else if (username.length > 30) errors.username = 'El usuario no puede superar los 30 caracteres';
   if (!values.email.trim()) errors.email = 'Ingresá tu email';
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
-    errors.email = 'Ingresá un email válido';
+  else if (!EMAIL_PATTERN.test(values.email.trim())) errors.email = 'Ingresá un email válido';
+  return errors;
+}
+
+export function validateRegister(values: RegisterValues): Partial<Record<keyof RegisterValues, string>> {
+  const errors: Partial<Record<keyof RegisterValues, string>> = validateProfile(values);
   if (values.password.length < 8) errors.password = 'La contraseña debe tener al menos 8 caracteres';
   else if (values.password.length > 72) errors.password = 'La contraseña no puede superar los 72 caracteres';
   return errors;

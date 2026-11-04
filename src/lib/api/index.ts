@@ -6,7 +6,7 @@
  */
 
 export { ApiError, SESSION_EXPIRED_EVENT, request } from './client';
-export type { RequestOptions } from './client';
+export type { ApiErrorCode, AuthMode, RequestOptions } from './client';
 
 export * as authApi from './auth';
 export * as catalogApi from './catalog';

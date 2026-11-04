@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { SiteHeader } from '../components/layout/SiteHeader';
 
 interface Props {
 	title?: string;
@@ -19,6 +20,7 @@ const { title = 'Deck Builder — Constructores de mazo multi-TCG' } = Astro.pro
 		<title>{title}</title>
 	</head>
 	<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+		<SiteHeader client:load currentPath={Astro.url.pathname} />
 		<slot />
 	</body>
 </html>
