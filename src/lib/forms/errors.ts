@@ -7,6 +7,7 @@
  */
 
 import { ApiError, type ApiErrorCode } from '../api/client';
+import { describeReason, normalizeDetailKey } from '../api/details';
 
 export type ErrorOverrides = Partial<Record<ApiErrorCode, string>>;
 
@@ -47,6 +48,11 @@ export function errorMessage(error: unknown): string | undefined {
   if (error instanceof ApiError) {
     // Los errores generados en el cliente ya quedan explicados por el título.
     if (error.code === 'NETWORK' || error.code === 'UNKNOWN') return undefined;
+    // Con details, el message del back es técnico ("validación fallida (Password: min…)"):
+    // los detalles se muestran traducidos junto a cada campo.
+    if (error.code === 'VALIDATION_ERROR' && error.details && Object.keys(error.details).length > 0) {
+      return undefined;
+    }
     return error.message;
   }
   if (error instanceof Error) return error.message;
@@ -59,16 +65,17 @@ export function describeError(error: unknown, overrides: ErrorOverrides = {}): E
 }
 
 /**
- * Mapea `details` del backend (`{campo: mensaje}`) a errores por campo.
- * Ignora campos que no coincidan con el formulario: esa info igual llega al
- * usuario vía `describeError`.
+ * Mapea `details` del backend a errores por campo del formulario, ya
+ * traducidos. Las claves del back (`Username`) se comparan normalizadas con
+ * las del formulario (`username`); las que no coinciden se ignoran.
  */
 export function fieldErrors(error: unknown, allowedFields: string[]): Record<string, string> {
   if (!(error instanceof ApiError) || !error.details) return {};
+  const byKey = new Map(allowedFields.map((field) => [normalizeDetailKey(field), field]));
   const result: Record<string, string> = {};
-  for (const field of allowedFields) {
-    const message = error.details[field];
-    if (message) result[field] = message;
+  for (const [key, reason] of Object.entries(error.details)) {
+    const field = byKey.get(normalizeDetailKey(key));
+    if (field) result[field] = describeReason(reason);
   }
   return result;
 }

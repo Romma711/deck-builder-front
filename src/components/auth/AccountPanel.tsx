@@ -3,16 +3,26 @@ import { authApi } from '../../lib/api';
 import type { User } from '../../types/api';
 import { ACCOUNT_ERRORS, describeError, fieldErrors, type ErrorDescription } from '../../lib/forms/errors';
 import { hasErrors, validateProfile } from '../../lib/forms/validate';
+import { getCurrentUser, setCurrentUser } from '../../lib/session/currentUser';
 import { clearSession } from '../../lib/session/session';
+import { RequireAuth } from './RequireAuth';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 
 /**
  * Panel de cuenta: perfil (PUT /me), logout y eliminación (DELETE /me).
- * Island interactiva: todo requiere la sesión del cliente.
+ * Island única de la página: incluye el guard de sesión.
  */
 export function AccountPanel() {
+  return (
+    <RequireAuth>
+      <AccountPanelContent />
+    </RequireAuth>
+  );
+}
+
+function AccountPanelContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loadError, setLoadError] = useState<ErrorDescription | null>(null);
   const [values, setValues] = useState({ username: '', email: '' });
@@ -24,9 +34,9 @@ export function AccountPanel() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    authApi
-      .getMe()
+    getCurrentUser()
       .then((me) => {
+        if (!me) return;
         setUser(me);
         setValues({ username: me.username, email: me.email });
       })
@@ -52,6 +62,7 @@ export function AccountPanel() {
         email: values.email.trim(),
       });
       setUser(updated);
+      setCurrentUser(updated);
       setSaveFeedback('Perfil actualizado');
     } catch (error) {
       setFormError(describeError(error, ACCOUNT_ERRORS));

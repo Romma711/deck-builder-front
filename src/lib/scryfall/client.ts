@@ -41,6 +41,7 @@ export interface ScryfallCard {
     oracle_text?: string;
     power?: string;
     toughness?: string;
+    colors?: string[];
     image_uris?: { small?: string; normal?: string; large?: string };
   }>;
 }
@@ -132,9 +133,32 @@ export async function autocompleteNames(query: string): Promise<string[]> {
 // --- Conversión a CardInput del backend ------------------------------------
 
 /**
- * Convierte una carta de Scryfall al CardInput que el backend valida.
- * `attributes` usa un shape simple y genérico; si el GameSpec del backend
- * exige otros campos, ajustar aquí (el back siempre es la autoridad).
+ * Tipos que acepta el GameSpec MTG del backend (`type` es oneof). Orden de
+ * prioridad para líneas con varios tipos: "Artifact Creature" → Creature,
+ * "Basic Land — Mountain" → Land.
+ */
+const MTG_MAIN_TYPES = ['Creature', 'Planeswalker', 'Land', 'Artifact', 'Enchantment', 'Instant', 'Sorcery'];
+
+/** Colores de Scryfall (WUBRG) → nombres que acepta el GameSpec MTG. */
+const MTG_COLOR_NAMES: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
+
+function mainType(typeLine: string | undefined): string | undefined {
+  if (!typeLine) return undefined;
+  // En cartas de dos caras se toma la cara frontal ("Creature — Human // Land").
+  const front = typeLine.split('//')[0];
+  return MTG_MAIN_TYPES.find((type) => front.includes(type));
+}
+
+function colorNames(colors: string[] | undefined): string[] {
+  const names = (colors ?? []).map((color) => MTG_COLOR_NAMES[color]).filter(Boolean);
+  return names.length > 0 ? names : ['Colorless'];
+}
+
+/**
+ * Convierte una carta de Scryfall al CardInput que valida el GameSpec MTG del
+ * backend (internal/app/gamespec/mtg.go): `type` (uno de MTG_MAIN_TYPES),
+ * `colors` (nombres en inglés, no vacío) y `mana_value` [0,20]. El resto de
+ * los atributos viaja como información extra (el back no los valida).
  */
 export function scryfallToCardInput(card: ScryfallCard): {
   name: string;
@@ -143,18 +167,20 @@ export function scryfallToCardInput(card: ScryfallCard): {
   attributes: Record<string, unknown>;
 } {
   const face = card.card_faces?.[0];
+  const typeLine = card.type_line ?? face?.type_line;
   return {
     name: card.name,
     serial_set: `${(card.set ?? 'UNK').toUpperCase()}-${card.collector_number ?? '0'}`,
     image: card.image_uris?.normal ?? card.image_uris?.large ?? face?.image_uris?.normal ?? '',
     attributes: {
       mana_cost: card.mana_cost ?? face?.mana_cost,
-      mana_value: card.cmc,
-      type: card.type_line ?? face?.type_line,
+      mana_value: card.cmc ?? 0,
+      type: mainType(typeLine),
+      type_line: typeLine,
       oracle_text: card.oracle_text ?? face?.oracle_text,
       power: card.power ?? face?.power,
       toughness: card.toughness ?? face?.toughness,
-      colors: card.colors,
+      colors: colorNames(card.colors ?? face?.colors),
       rarity: card.rarity,
     },
   };

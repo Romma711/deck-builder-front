@@ -1,0 +1,18 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { DeckDetail } from '../../../components/deck/DeckDetail';
+import { isUuid } from '../../../lib/ids';
+
+// Ruta dinámica renderizada on-demand (adapter Node).
+export const prerender = false;
+
+const { id } = Astro.params;
+// Un id mal formado nunca existe: 404 sin pegarle al backend.
+if (!isUuid(id)) return new Response(null, { status: 404 });
+---
+
+<Layout title="Mazo — Deck Builder">
+  <main class="mx-auto max-w-5xl px-4 py-10">
+    <DeckDetail client:load deckId={id} />
+  </main>
+</Layout>

@@ -1,4 +1,5 @@
 import { useCatalog } from '../../lib/catalog/useCatalog';
+import { describeSize, maxCopiesFor, sizeRequirement } from '../../lib/deck/rules';
 
 export interface GameFormatSelection {
   game: string;
@@ -11,8 +12,10 @@ interface Props {
   /** Etiquetas accesibles */
   gameLabel?: string;
   formatLabel?: string;
-  /** Deshabilita ambos selects (p. ej. al editar un mazo existente) */
+  /** Deshabilita ambos selects */
   disabled?: boolean;
+  /** Bloquea solo el juego (p. ej. al editar un mazo: sus cartas son de ese juego) */
+  lockGame?: boolean;
   /** Muestra el error de validación bajo el select de formato */
   formatError?: string;
 }
@@ -29,6 +32,7 @@ export function GameFormatSelector({
   gameLabel = 'Juego',
   formatLabel = 'Formato',
   disabled = false,
+  lockGame = false,
   formatError,
 }: Props) {
   const { status, games, errorMessage } = useCatalog();
@@ -72,7 +76,7 @@ export function GameFormatSelector({
         <select
           id="game-select"
           value={activeGame?.code ?? ''}
-          disabled={disabled}
+          disabled={disabled || lockGame}
           onChange={(e) => handleGameChange(e.target.value)}
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-60"
         >
@@ -117,12 +121,12 @@ export function FormatRulesSummary({ game, format }: GameFormatSelection) {
 
   if (!rules) return null;
 
-  const parts: string[] = [];
-  if (rules.deck_size) parts.push(`${rules.deck_size} cartas`);
-  if (rules.min_size || rules.max_size) {
-    parts.push(`entre ${rules.min_size ?? '?'} y ${rules.max_size ?? '?'}`);
-  }
-  if (rules.requires_leader) parts.push('requiere líder');
+  const maxCopies = maxCopiesFor(game, format);
+  const parts = [
+    describeSize(sizeRequirement(rules)),
+    maxCopies !== undefined ? `máx. ${maxCopies} ${maxCopies === 1 ? 'copia' : 'copias'} por carta` : undefined,
+    rules.requires_leader ? 'requiere líder' : undefined,
+  ].filter(Boolean);
 
   if (parts.length === 0) return null;
 

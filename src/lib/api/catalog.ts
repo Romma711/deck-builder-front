@@ -25,9 +25,9 @@ export function getGame(code: string): Promise<Game> {
   return request<Game>(`/games/${encodeURIComponent(code)}`, { auth: 'none' });
 }
 
-/** GET /cards — catálogo de cartas (filtros combinables, paginado) */
-export function listCards(query: CardsQuery = {}): Promise<Paged<Card>> {
-  return request<Paged<Card>>('/cards', { auth: 'none' }, query);
+/** GET /cards — catálogo de cartas (filtros combinables, paginado). `signal` permite cancelar búsquedas viejas. */
+export function listCards(query: CardsQuery = {}, signal?: AbortSignal): Promise<Paged<Card>> {
+  return request<Paged<Card>>('/cards', { auth: 'none', signal }, query);
 }
 
 /** GET /cards/{id} — una carta por ID */

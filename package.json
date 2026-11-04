@@ -9,9 +9,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "start": "node ./dist/server/entry.mjs"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.9",
     "@astrojs/react": "^7.1.1",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.4.0",

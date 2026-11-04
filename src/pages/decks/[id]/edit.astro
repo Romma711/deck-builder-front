@@ -1,0 +1,17 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { DeckEditor } from '../../../components/deck/DeckEditor';
+import { isUuid } from '../../../lib/ids';
+
+// Ruta dinámica renderizada on-demand (adapter Node).
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!isUuid(id)) return new Response(null, { status: 404 });
+---
+
+<Layout title="Editar mazo — Deck Builder">
+  <main class="mx-auto max-w-5xl px-4 py-10">
+    <DeckEditor client:load deckId={id} />
+  </main>
+</Layout>

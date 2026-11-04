@@ -2,6 +2,7 @@ import { useCatalog } from '../../lib/catalog/useCatalog';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { reloadCatalog } from '../../lib/catalog/catalog';
+import { describeSize, sizeRequirement } from '../../lib/deck/rules';
 
 /**
  * Catálogo público de juegos con sus formatos y reglas (GET /games).
@@ -49,23 +50,21 @@ export function GamesCatalog() {
             <p className="text-sm text-slate-400">Sin formatos configurados todavía.</p>
           ) : (
             <ul className="flex flex-col divide-y divide-slate-800">
-              {(game.formats ?? []).map((format) => (
-                <li key={format.code} className="flex items-center justify-between gap-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-slate-200">{format.name}</p>
-                    <p className="text-xs text-slate-500">{format.code}</p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end text-xs text-slate-400">
-                    {format.deck_size && <span>{format.deck_size} cartas</span>}
-                    {(format.min_size || format.max_size) && (
-                      <span>
-                        {format.min_size ?? '?'}–{format.max_size ?? '?'} cartas
-                      </span>
-                    )}
-                    {format.requires_leader && <span className="text-indigo-400">Requiere líder</span>}
-                  </div>
-                </li>
-              ))}
+              {(game.formats ?? []).map((format) => {
+                const size = describeSize(sizeRequirement(format));
+                return (
+                  <li key={format.code} className="flex items-center justify-between gap-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium text-slate-200">{format.name}</p>
+                      <p className="text-xs text-slate-500">{format.code}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end text-xs text-slate-400">
+                      {size && <span>{size}</span>}
+                      {format.requires_leader && <span className="text-indigo-400">Requiere líder</span>}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
