@@ -23,3 +23,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Plan de trabajo local (no se versiona)
+PLAN.md
