@@ -10,7 +10,7 @@ const { id } = Astro.params;
 if (!isUuid(id)) return new Response(null, { status: 404 });
 ---
 
-<Layout title="Editar mazo — Deck Builder">
+<Layout title="Editar mazo — Deck Builder" noindex>
   <main class="mx-auto max-w-5xl px-4 py-10">
     <DeckEditor client:load deckId={id} />
   </main>

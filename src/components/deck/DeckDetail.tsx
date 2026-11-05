@@ -10,6 +10,7 @@ import { useSession } from '../../lib/session/useSession';
 import type { Deck, User } from '../../types/api';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
+import { LocalDate } from '../ui/LocalDate';
 import { CardThumb, cardTypeLine } from './CardThumb';
 
 const DETAIL_ERRORS = {
@@ -19,6 +20,12 @@ const DETAIL_ERRORS = {
 
 interface Props {
   deckId: string;
+  /**
+   * Mazo ya obtenido en el servidor (solo si es público). Permite que el
+   * HTML inicial traiga el contenido (SEO, sin "Cargando…"). Si falta
+   * (privado, timeout), el cliente lo pide con su token.
+   */
+  initialDeck?: Deck | null;
 }
 
 type LoadState =
@@ -43,10 +50,12 @@ function deckToText(deck: Deck): string {
  * - otro usuario logueado: copiar a su dashboard;
  * - anónimo: invitación a iniciar sesión para copiarlo.
  */
-export function DeckDetail({ deckId }: Props) {
+export function DeckDetail({ deckId, initialDeck }: Props) {
   const catalog = useCatalog();
   const { isAuthenticated } = useSession();
-  const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const [state, setState] = useState<LoadState>(() =>
+    initialDeck ? { status: 'ready', deck: initialDeck, me: null } : { status: 'loading' },
+  );
   const [busy, setBusy] = useState<'duplicate' | 'visibility' | 'delete' | null>(null);
   const [actionError, setActionError] = useState<ErrorDescription | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -54,7 +63,9 @@ export function DeckDetail({ deckId }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([decksApi.getDeck(deckId), getCurrentUser().catch(() => null)])
+    // Con el mazo del servidor solo falta saber quién mira (acciones de dueño).
+    const deckPromise = initialDeck ? Promise.resolve(initialDeck) : decksApi.getDeck(deckId);
+    Promise.all([deckPromise, getCurrentUser().catch(() => null)])
       .then(([deck, me]) => {
         if (!cancelled) setState({ status: 'ready', deck, me });
       })
@@ -64,7 +75,7 @@ export function DeckDetail({ deckId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [deckId]);
+  }, [deckId, initialDeck]);
 
   if (state.status === 'error') {
     return (
@@ -150,7 +161,7 @@ export function DeckDetail({ deckId }: Props) {
             </p>
             {deck.updated_at && (
               <p className="text-xs text-slate-500">
-                Actualizado el {new Date(deck.updated_at).toLocaleDateString('es')}
+                Actualizado el <LocalDate value={deck.updated_at} />
               </p>
             )}
           </div>

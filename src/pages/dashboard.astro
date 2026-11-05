@@ -3,16 +3,21 @@ import Layout from '../layouts/Layout.astro';
 import { DeckList } from '../components/dashboard/DeckList';
 ---
 
-<Layout title="Mis mazos — Deck Builder">
+<Layout title="Mis mazos — Deck Builder" noindex>
   <main class="mx-auto max-w-5xl px-4 py-16">
     <div class="mb-8 flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-bold text-white">Mis mazos</h1>
-      <a
-        href="/decks/new"
-        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-      >
-        + Nuevo mazo
-      </a>
+      <div class="flex flex-wrap gap-2">
+        <a href="/search" class="rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">
+          Explorar mazos de la comunidad
+        </a>
+        <a
+          href="/decks/new"
+          class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+        >
+          + Nuevo mazo
+        </a>
+      </div>
     </div>
     <DeckList client:load />
   </main>

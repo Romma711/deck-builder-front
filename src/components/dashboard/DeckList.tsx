@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { decksApi } from '../../lib/api';
-import { getFormat, getGameByCode } from '../../lib/catalog/catalog';
-import { useCatalog } from '../../lib/catalog/useCatalog';
 import { describeError, type ErrorDescription } from '../../lib/forms/errors';
 import { getCurrentUser } from '../../lib/session/currentUser';
 import type { Deck } from '../../types/api';
 import { RequireAuth } from '../auth/RequireAuth';
+import { DeckSummaryCard } from '../deck/DeckSummaryCard';
 import { Alert } from '../ui/Alert';
 
 /**
@@ -22,7 +21,6 @@ export function DeckList() {
 }
 
 function DeckListContent() {
-  const catalog = useCatalog();
   const [decks, setDecks] = useState<Deck[] | null>(null);
   const [error, setError] = useState<ErrorDescription | null>(null);
 
@@ -70,40 +68,13 @@ function DeckListContent() {
     );
   }
 
-  const ready = catalog.status === 'ready';
-
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {decks.map((deck) => {
-        const gameName = (ready && getGameByCode(deck.game)?.name) || deck.game;
-        const formatName = (ready && getFormat(deck.game, deck.format)?.name) || deck.format;
-        return (
-          <li key={deck.id}>
-            <a
-              href={`/decks/${deck.id}`}
-              className="flex h-full flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900 p-4 transition-colors hover:border-slate-600 focus-visible:outline-2 focus-visible:outline-indigo-500"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-slate-100">{deck.name}</h3>
-                {deck.private && (
-                  <span className="shrink-0 rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300" title="Mazo privado">
-                    🔒 Privado
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-slate-400">
-                {gameName} · {formatName} · {deck.deck_size} cartas
-                {deck.leader ? ` · Líder: ${deck.leader.name}` : ''}
-              </p>
-              {deck.updated_at && (
-                <p className="text-xs text-slate-500">
-                  Actualizado {new Date(deck.updated_at).toLocaleDateString('es')}
-                </p>
-              )}
-            </a>
-          </li>
-        );
-      })}
+      {decks.map((deck) => (
+        <li key={deck.id}>
+          <DeckSummaryCard deck={deck} />
+        </li>
+      ))}
     </ul>
   );
 }

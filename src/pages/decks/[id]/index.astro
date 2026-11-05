@@ -1,18 +1,42 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import { DeckDetail } from '../../../components/deck/DeckDetail';
+import { catalogApi, decksApi } from '../../../lib/api';
 import { isUuid } from '../../../lib/ids';
+import type { Deck } from '../../../types/api';
 
 // Ruta dinámica renderizada on-demand (adapter Node).
 export const prerender = false;
 
+/** El SSR nunca debe frenar la página: si el back tarda, carga el cliente. */
+const SERVER_FETCH_TIMEOUT_MS = 1500;
+
 const { id } = Astro.params;
 // Un id mal formado nunca existe: 404 sin pegarle al backend.
 if (!isUuid(id)) return new Response(null, { status: 404 });
+
+// El servidor no tiene el token del usuario: solo ve mazos PÚBLICOS. Un mazo
+// privado (o un fallo/timeout) deja `deck` en null y el cliente lo pide con
+// su sesión.
+const signal = AbortSignal.timeout(SERVER_FETCH_TIMEOUT_MS);
+const [deck, games] = await Promise.all([
+  decksApi.getDeck(id, signal).catch((): Deck | null => null),
+  catalogApi.listGames().then(({ data }) => data).catch(() => []),
+]);
+
+const game = deck ? games.find((g) => g.code === deck.game) : undefined;
+const formatName = deck ? (game?.formats?.find((f) => f.code === deck.format)?.name ?? deck.format) : undefined;
+const total = deck?.cards?.reduce((sum, entry) => sum + entry.quantity, 0) ?? deck?.deck_size;
+
+const title = deck ? `${deck.name} — mazo de ${game?.name ?? deck.game} | Deck Builder` : 'Mazo — Deck Builder';
+const description = deck
+  ? deck.description?.trim() ||
+    `Mazo ${formatName} de ${game?.name ?? deck.game} con ${total} cartas${deck.leader ? `, liderado por ${deck.leader.name}` : ''}.`
+  : undefined;
 ---
 
-<Layout title="Mazo — Deck Builder">
+<Layout title={title} description={description} image={deck?.leader?.image || undefined} noindex={!deck}>
   <main class="mx-auto max-w-5xl px-4 py-10">
-    <DeckDetail client:load deckId={id} />
+    <DeckDetail client:load deckId={id} initialDeck={deck} />
   </main>
 </Layout>

@@ -4,9 +4,23 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 
 interface Props {
 	title?: string;
+	/** Meta description y og:description */
+	description?: string;
+	/** Imagen para previews al compartir (og:image) */
+	image?: string;
+	/** Páginas privadas o de sesión: fuera de los buscadores */
+	noindex?: boolean;
 }
 
-const { title = 'Deck Builder — Constructores de mazo multi-TCG' } = Astro.props;
+const {
+	title = 'Deck Builder — Constructor de mazos multi-TCG',
+	description = 'Armá, validá y compartí mazos de Magic, Pokémon, Yu-Gi-Oh! y One Piece.',
+	image,
+	noindex = false,
+} = Astro.props;
+
+// `site` no está configurado: sin él la canonical queda relativa al request.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
 ---
 
 <!doctype html>
@@ -18,6 +32,15 @@ const { title = 'Deck Builder — Constructores de mazo multi-TCG' } = Astro.pro
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex" />}
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		{image && <meta property="og:image" content={image} />}
+		<meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
 	</head>
 	<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
 		<SiteHeader client:load currentPath={Astro.url.pathname} />

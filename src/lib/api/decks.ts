@@ -22,9 +22,13 @@ export type DecksQuery = {
   leader?: string;
 };
 
-/** GET /decks — mazos visibles (públicos; con sesión, también los propios y de orgs) */
-export function listDecks(query: DecksQuery = {}): Promise<{ data: Deck[]; meta?: ListMeta }> {
-  return request<{ data: Deck[]; meta?: ListMeta }>('/decks', { auth: 'optional' }, query);
+/**
+ * GET /decks — mazos visibles (públicos; con sesión, también los propios y de orgs).
+ * Ojo: el backend NO pagina (devuelve todo lo que coincide) y `leader` es
+ * nombre exacto. `signal` permite cancelar búsquedas viejas.
+ */
+export function listDecks(query: DecksQuery = {}, signal?: AbortSignal): Promise<{ data: Deck[]; meta?: ListMeta }> {
+  return request<{ data: Deck[]; meta?: ListMeta }>('/decks', { auth: 'optional', signal }, query);
 }
 
 /** POST /decks — crear mazo (personal u org; el back valida contra el GameSpec) */
@@ -33,8 +37,8 @@ export function createDeck(input: DeckInput): Promise<Deck> {
 }
 
 /** GET /decks/{id} — detalle (privado ajeno → 404) */
-export function getDeck(id: string): Promise<Deck> {
-  return request<Deck>(`/decks/${encodeURIComponent(id)}`, { auth: 'optional' });
+export function getDeck(id: string, signal?: AbortSignal): Promise<Deck> {
+  return request<Deck>(`/decks/${encodeURIComponent(id)}`, { auth: 'optional', signal });
 }
 
 /** PUT /decks/{id} — reemplazo completo (solo el dueño) */
