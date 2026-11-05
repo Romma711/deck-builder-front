@@ -75,6 +75,10 @@ export function describeReason(reason: string): string {
       return 'Ingresá un email válido';
     case 'uuid':
       return 'Identificador inválido';
+    case 'lowercase_slug_1_50':
+      return 'Solo minúsculas, números y guiones (máx. 50)';
+    case 'unknown':
+      return 'No existe';
     case 'unsupported':
       return 'No está soportado';
     case 'unsupported_for_game':

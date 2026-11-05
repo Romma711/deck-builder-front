@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { orgsApi } from '../../lib/api';
 import { useCatalog } from '../../lib/catalog/useCatalog';
 import { describeError, type ErrorDescription } from '../../lib/forms/errors';
 import {
@@ -13,6 +12,7 @@ import {
   type DeckSearchResult,
   type SearchState,
 } from '../../lib/search/deckSearch';
+import { getMyOrgs } from '../../lib/org/myOrgs';
 import { getCurrentUser } from '../../lib/session/currentUser';
 import { useSession } from '../../lib/session/useSession';
 import type { Organization, User } from '../../types/api';
@@ -91,9 +91,8 @@ export function DeckSearch() {
     getCurrentUser()
       .then(setMe)
       .catch(() => setMe(null));
-    orgsApi
-      .listOrgs()
-      .then(({ data }) => setOrgs(data))
+    getMyOrgs()
+      .then(setOrgs)
       .catch(() => setOrgs([]));
   }, [isAuthenticated]);
 

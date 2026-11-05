@@ -59,9 +59,14 @@ export function errorMessage(error: unknown): string | undefined {
   return undefined;
 }
 
-/** Título + mensaje listos para un `<Alert>`. */
+/**
+ * Título + mensaje listos para un `<Alert>`. Si la pantalla define su propio
+ * título para ese code, ya explica el problema en contexto: no se repite el
+ * mensaje técnico del backend ("conflicto: el usuario ya es miembro…").
+ */
 export function describeError(error: unknown, overrides: ErrorOverrides = {}): ErrorDescription {
-  return { title: errorTitle(error, overrides), message: errorMessage(error) };
+  const overridden = error instanceof ApiError && overrides[error.code] !== undefined;
+  return { title: errorTitle(error, overrides), message: overridden ? undefined : errorMessage(error) };
 }
 
 /**

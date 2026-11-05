@@ -1,0 +1,18 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { OrgDetail } from '../../../components/org/OrgDetail';
+import { isUuid } from '../../../lib/ids';
+
+// Ruta dinámica renderizada on-demand (adapter Node). Contenido privado:
+// todo se carga en el cliente con la sesión del usuario.
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!isUuid(id)) return new Response(null, { status: 404 });
+---
+
+<Layout title="Organización — Deck Builder" noindex>
+  <main class="mx-auto max-w-5xl px-4 py-12">
+    <OrgDetail client:load orgId={id} />
+  </main>
+</Layout>

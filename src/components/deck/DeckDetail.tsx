@@ -5,9 +5,10 @@ import { useCatalog } from '../../lib/catalog/useCatalog';
 import { draftFromDeck, draftToInput } from '../../lib/deck/draft';
 import { describeError, type ErrorDescription } from '../../lib/forms/errors';
 import { loginUrl } from '../../lib/navigation';
+import { getMyOrgs } from '../../lib/org/myOrgs';
 import { getCurrentUser } from '../../lib/session/currentUser';
 import { useSession } from '../../lib/session/useSession';
-import type { Deck, User } from '../../types/api';
+import type { Deck, Organization, User } from '../../types/api';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { LocalDate } from '../ui/LocalDate';
@@ -60,14 +61,18 @@ export function DeckDetail({ deckId, initialDeck }: Props) {
   const [actionError, setActionError] = useState<ErrorDescription | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  /** Org del mazo, si el usuario es miembro (para mostrarla y enlazarla) */
+  const [org, setOrg] = useState<Organization | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     // Con el mazo del servidor solo falta saber quién mira (acciones de dueño).
     const deckPromise = initialDeck ? Promise.resolve(initialDeck) : decksApi.getDeck(deckId);
-    Promise.all([deckPromise, getCurrentUser().catch(() => null)])
-      .then(([deck, me]) => {
-        if (!cancelled) setState({ status: 'ready', deck, me });
+    Promise.all([deckPromise, getCurrentUser().catch(() => null), getMyOrgs().catch(() => [])])
+      .then(([deck, me, orgs]) => {
+        if (cancelled) return;
+        setState({ status: 'ready', deck, me });
+        setOrg(orgs.find((o) => o.id === deck.org_id) ?? null);
       })
       .catch((error: unknown) => {
         if (!cancelled) setState({ status: 'error', error: describeError(error, DETAIL_ERRORS) });
@@ -159,6 +164,14 @@ export function DeckDetail({ deckId, initialDeck }: Props) {
                 <span className="ml-2 rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">🔒 Privado</span>
               )}
             </p>
+            {org && (
+              <a
+                href={`/orgs/${org.id}`}
+                className="w-fit rounded bg-indigo-950/60 px-2 py-0.5 text-xs text-indigo-200 hover:underline"
+              >
+                🏷 {org.name}
+              </a>
+            )}
             {deck.updated_at && (
               <p className="text-xs text-slate-500">
                 Actualizado el <LocalDate value={deck.updated_at} />

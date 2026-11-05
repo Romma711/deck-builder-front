@@ -6,13 +6,16 @@ import { draftFromDeck, draftReducer, draftToInput, emptyDraft, sameDraft, type 
 import { DESCRIPTION_MAX, NAME_MAX, validateDeck } from '../../lib/deck/rules';
 import { emptyServerErrors, mapDeckServerErrors, type DeckServerErrors } from '../../lib/deck/serverErrors';
 import { describeError, type ErrorDescription } from '../../lib/forms/errors';
+import { getMyOrgs } from '../../lib/org/myOrgs';
 import { getCurrentUser } from '../../lib/session/currentUser';
+import type { Organization } from '../../types/api';
 import { RequireAuth } from '../auth/RequireAuth';
 import { FormatRulesSummary, GameFormatSelector } from '../catalog/GameFormatSelector';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { Checkbox } from '../ui/Checkbox';
 import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import { CardSearch } from './CardSearch';
 import { DeckCardList } from './DeckCardList';
@@ -54,20 +57,29 @@ function DeckEditorContent({ deckId }: Props) {
   const [saveError, setSaveError] = useState<ErrorDescription | null>(null);
   const [serverErrors, setServerErrors] = useState<DeckServerErrors>(emptyServerErrors);
   const [pendingGame, setPendingGame] = useState<{ game: string; format: string } | null>(null);
+  const [orgs, setOrgs] = useState<Organization[] | null>(null);
   const leaving = useRef(false);
 
-  // --- Carga inicial: mazo nuevo (espera al catálogo) -------------------------
+  // Orgs del usuario: destino posible del mazo (sin orgs, el selector no aparece).
   useEffect(() => {
-    if (deckId || catalog.status !== 'ready' || baseline) return;
-    // Juego/formato preseleccionados por URL (?game=&format=) o el primero del catálogo.
+    getMyOrgs()
+      .then(setOrgs)
+      .catch(() => setOrgs([]));
+  }, []);
+
+  // --- Carga inicial: mazo nuevo (espera al catálogo y a las orgs) ------------
+  useEffect(() => {
+    if (deckId || catalog.status !== 'ready' || orgs === null || baseline) return;
+    // Preselección por URL (?game=&format=&org=) o el primer juego/formato del catálogo.
     const params = new URLSearchParams(window.location.search);
     const game = catalog.games.find((g) => g.code === params.get('game')) ?? catalog.games[0];
     const format = game?.formats?.find((f) => f.code === params.get('format')) ?? game?.formats?.[0];
-    const initial = emptyDraft(game?.code ?? '', format?.code ?? '');
+    const org = orgs.find((o) => o.id === params.get('org'));
+    const initial = { ...emptyDraft(game?.code ?? '', format?.code ?? ''), orgId: org?.id };
     dispatch({ type: 'reset', draft: initial });
     setBaseline(initial);
     setLoad({ status: 'ready' });
-  }, [deckId, catalog.status, catalog.games, baseline]);
+  }, [deckId, catalog.status, catalog.games, orgs, baseline]);
 
   // --- Carga inicial: edición (solo el dueño) --------------------------------
   useEffect(() => {
@@ -257,9 +269,28 @@ function DeckEditorContent({ deckId }: Props) {
             error={fieldIssue('description') ?? serverErrors.fields.description}
             onChange={(event) => dispatch({ type: 'setField', field: 'description', value: event.target.value })}
           />
+          {orgs && (orgs.length > 0 || draft.orgId) && (
+            <Select
+              label="Pertenece a"
+              value={draft.orgId ?? ''}
+              options={[
+                { value: '', label: 'Mis mazos (personal)' },
+                ...orgs.map((org) => ({ value: org.id, label: org.name })),
+                // Org a la que ya no pertenecés: se conserva hasta que elijas otra.
+                ...(draft.orgId && !orgs.some((org) => org.id === draft.orgId)
+                  ? [{ value: draft.orgId, label: 'Organización actual' }]
+                  : []),
+              ]}
+              onChange={(event) => dispatch({ type: 'setOrg', orgId: event.target.value })}
+            />
+          )}
           <Checkbox
             label="Mazo privado"
-            hint="Solo vos (y los miembros de su organización) pueden verlo."
+            hint={
+              draft.orgId
+                ? `Solo vos y los miembros de ${orgs?.find((org) => org.id === draft.orgId)?.name ?? 'la organización'} pueden verlo.`
+                : 'Solo vos podés verlo.'
+            }
             checked={draft.private}
             onChange={(event) => dispatch({ type: 'setPrivate', value: event.target.checked })}
           />
