@@ -1,20 +1,22 @@
 import { useState, type SubmitEvent } from 'react';
 import { authApi } from '../../lib/api';
-import { errorTitle, errorMessage, fieldErrors } from '../../lib/forms/errors';
+import { ACCOUNT_ERRORS, describeError, fieldErrors, type ErrorDescription } from '../../lib/forms/errors';
 import { hasErrors, validateRegister } from '../../lib/forms/validate';
+import { nextFromLocation } from '../../lib/navigation';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 
 interface Props {
-  redirectTo?: string;
+  /** A dónde ir tras registrarse si la URL no trae un `?next=` válido */
+  fallbackRedirect?: string;
 }
 
-export function RegisterForm({ redirectTo = '/dashboard' }: Props) {
+export function RegisterForm({ fallbackRedirect = '/dashboard' }: Props) {
   const [values, setValues] = useState({ username: '', email: '', password: '' });
   const [errors, setErrors] = useState<Partial<Record<'username' | 'email' | 'password', string>>>({});
   const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<{ title: string; message?: string } | null>(null);
+  const [formError, setFormError] = useState<ErrorDescription | null>(null);
 
   function update<K extends keyof typeof values>(key: K, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -38,9 +40,9 @@ export function RegisterForm({ redirectTo = '/dashboard' }: Props) {
       });
       // Registro no devuelve tokens: login automático y al dashboard.
       await authApi.login({ username: values.username.trim(), password: values.password });
-      window.location.assign(redirectTo);
+      window.location.assign(nextFromLocation(fallbackRedirect));
     } catch (error) {
-      setFormError({ title: errorTitle(error), message: errorMessage(error) });
+      setFormError(describeError(error, ACCOUNT_ERRORS));
       setErrors(fieldErrors(error, ['username', 'email', 'password']));
     } finally {
       setLoading(false);

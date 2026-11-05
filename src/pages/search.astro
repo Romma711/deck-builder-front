@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { DeckSearch } from '../components/search/DeckSearch';
+---
+
+<Layout
+  title="Buscar mazos — Deck Builder"
+  description="Explorá mazos públicos de Magic, Pokémon, Yu-Gi-Oh! y One Piece filtrando por juego, formato y líder."
+>
+  <main class="mx-auto max-w-6xl px-4 py-12">
+    <div class="mb-8 flex flex-col gap-2">
+      <h1 class="text-2xl font-bold text-white">Buscar mazos</h1>
+      <p class="text-sm text-slate-400">
+        Mazos públicos de la comunidad. Con sesión iniciada también ves tus mazos privados y los de tus
+        organizaciones.
+      </p>
+    </div>
+    <DeckSearch client:load />
+  </main>
+</Layout>

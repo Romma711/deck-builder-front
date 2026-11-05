@@ -1,10 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { SiteHeader } from '../components/layout/SiteHeader';
 ---
 
 <Layout>
-  <SiteHeader client:load />
   <main class="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-20">
     <section class="flex flex-col items-start gap-4">
       <h1 class="text-4xl font-bold text-white">
@@ -14,7 +12,7 @@ import { SiteHeader } from '../components/layout/SiteHeader';
         Magic, Pokémon, Yu-Gi-Oh! y más en un solo lugar. Creá tu cuenta, armá tus mazos con
         validación de formato y compartilos con la comunidad.
       </p>
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <a
           href="/register"
           class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
@@ -22,10 +20,10 @@ import { SiteHeader } from '../components/layout/SiteHeader';
           Crear cuenta
         </a>
         <a
-          href="/login"
+          href="/search"
           class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-700"
         >
-          Iniciar sesión
+          Explorar mazos
         </a>
       </div>
     </section>

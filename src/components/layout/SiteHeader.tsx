@@ -1,20 +1,30 @@
 import { useSession } from '../../lib/session/useSession';
 
+interface Props {
+  /** Ruta actual (`Astro.url.pathname`), igual en servidor y cliente */
+  currentPath: string;
+}
+
 /**
  * Barra de navegación con estado de sesión (island).
  * Muestra Login/Registro o Mi cuenta según haya sesión.
+ *
+ * La ruta llega por prop desde el layout en vez de leer `window.location`
+ * durante el render, para que servidor y cliente rendericen lo mismo.
  */
-export function SiteHeader() {
+export function SiteHeader({ currentPath }: Props) {
   const { isAuthenticated } = useSession();
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-  const next = encodeURIComponent(currentPath || '/');
+  const isAuthPage = currentPath.startsWith('/login') || currentPath.startsWith('/register');
+  const loginHref =
+    currentPath === '/' || isAuthPage ? '/login' : `/login?next=${encodeURIComponent(currentPath)}`;
 
   const linkClass = (path: string) =>
     `rounded-lg px-3 py-2 text-sm transition-colors ${
-      currentPath.startsWith(path) && path !== '/'
+      currentPath.startsWith(path)
         ? 'bg-slate-800 text-white'
         : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
     }`;
+  const current = (path: string) => (currentPath.startsWith(path) ? 'page' : undefined);
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/95">
@@ -23,21 +33,24 @@ export function SiteHeader() {
           🃏 Deck Builder
         </a>
         <div className="flex items-center gap-1">
-          <a href="/search" className={linkClass('/search')}>
+          <a href="/games" className={linkClass('/games')} aria-current={current('/games')}>
+            Juegos
+          </a>
+          <a href="/search" className={linkClass('/search')} aria-current={current('/search')}>
             Buscar mazos
           </a>
           {isAuthenticated ? (
             <>
-              <a href="/dashboard" className={linkClass('/dashboard')}>
+              <a href="/dashboard" className={linkClass('/dashboard')} aria-current={current('/dashboard')}>
                 Mis mazos
               </a>
-              <a href="/settings" className={linkClass('/settings')}>
+              <a href="/settings" className={linkClass('/settings')} aria-current={current('/settings')}>
                 Mi cuenta
               </a>
             </>
           ) : (
             <>
-              <a href={`/login?next=${next}`} className={linkClass('/login')}>
+              <a href={loginHref} className={linkClass('/login')} aria-current={current('/login')}>
                 Iniciar sesión
               </a>
               <a

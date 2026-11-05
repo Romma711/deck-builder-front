@@ -9,6 +9,9 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> {
 
 export function Input({ label, error, type = 'text', className, ...rest }: Props) {
   const id = useId();
+  const errorId = `${id}-error`;
+  const describedBy = [rest['aria-describedby'], error ? errorId : undefined].filter(Boolean).join(' ') || undefined;
+
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-sm font-medium text-slate-300">
@@ -19,11 +22,16 @@ export function Input({ label, error, type = 'text', className, ...rest }: Props
         id={id}
         type={type}
         aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
         className={`rounded-lg border bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500 ${
           error ? 'border-red-500' : 'border-slate-700'
         } ${className ?? ''}`}
       />
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p id={errorId} className="text-xs text-red-400">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

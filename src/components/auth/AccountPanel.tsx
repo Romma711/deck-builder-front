@@ -1,35 +1,46 @@
 import { useEffect, useState, type SubmitEvent } from 'react';
 import { authApi } from '../../lib/api';
 import type { User } from '../../types/api';
-import { errorTitle, errorMessage, fieldErrors } from '../../lib/forms/errors';
-import { hasErrors } from '../../lib/forms/validate';
+import { ACCOUNT_ERRORS, describeError, fieldErrors, type ErrorDescription } from '../../lib/forms/errors';
+import { hasErrors, validateProfile } from '../../lib/forms/validate';
+import { getCurrentUser, setCurrentUser } from '../../lib/session/currentUser';
+import { clearSession } from '../../lib/session/session';
+import { RequireAuth } from './RequireAuth';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 
 /**
  * Panel de cuenta: perfil (PUT /me), logout y eliminación (DELETE /me).
- * Island interactiva: todo requiere la sesión del cliente.
+ * Island única de la página: incluye el guard de sesión.
  */
 export function AccountPanel() {
+  return (
+    <RequireAuth>
+      <AccountPanelContent />
+    </RequireAuth>
+  );
+}
+
+function AccountPanelContent() {
   const [user, setUser] = useState<User | null>(null);
-  const [loadError, setLoadError] = useState<{ title: string; message?: string } | null>(null);
+  const [loadError, setLoadError] = useState<ErrorDescription | null>(null);
   const [values, setValues] = useState({ username: '', email: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<'username' | 'email', string>>>({});
   const [saving, setSaving] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
-  const [formError, setFormError] = useState<{ title: string; message?: string } | null>(null);
+  const [formError, setFormError] = useState<ErrorDescription | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    authApi
-      .getMe()
+    getCurrentUser()
       .then((me) => {
+        if (!me) return;
         setUser(me);
         setValues({ username: me.username, email: me.email });
       })
-      .catch((error) => setLoadError({ title: errorTitle(error), message: errorMessage(error) }));
+      .catch((error) => setLoadError(describeError(error)));
   }, []);
 
   async function handleSave(event: SubmitEvent) {
@@ -38,9 +49,7 @@ export function AccountPanel() {
     setSaveFeedback(null);
     setErrors({});
 
-    const clientErrors: Record<string, string> = {};
-    if (values.username.trim().length < 3) clientErrors.username = 'Mínimo 3 caracteres';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) clientErrors.email = 'Email inválido';
+    const clientErrors = validateProfile(values);
     if (hasErrors(clientErrors)) {
       setErrors(clientErrors);
       return;
@@ -53,9 +62,10 @@ export function AccountPanel() {
         email: values.email.trim(),
       });
       setUser(updated);
+      setCurrentUser(updated);
       setSaveFeedback('Perfil actualizado');
     } catch (error) {
-      setFormError({ title: errorTitle(error), message: errorMessage(error) });
+      setFormError(describeError(error, ACCOUNT_ERRORS));
       setErrors(fieldErrors(error, ['username', 'email']));
     } finally {
       setSaving(false);
@@ -72,11 +82,12 @@ export function AccountPanel() {
     setFormError(null);
     try {
       await authApi.deleteMe();
-      // La cuenta ya no existe: la sesión local muere con la página.
-      localStorage.clear();
+      // El back ya revocó los tokens en cascada: solo limpiamos la sesión local
+      // (sin tocar el resto de localStorage: preferencias, caché, etc.).
+      clearSession();
       window.location.assign('/');
     } catch (error) {
-      setFormError({ title: errorTitle(error), message: errorMessage(error) });
+      setFormError(describeError(error));
       setDeleting(false);
       setConfirmingDelete(false);
     }

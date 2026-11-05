@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { SESSION_EXPIRED_EVENT } from '../../lib/api';
-import { getState, subscribe } from '../../lib/session/session';
+import { useEffect, type ReactNode } from 'react';
+import { loginUrl } from '../../lib/navigation';
+import { getState } from '../../lib/session/session';
+import { useSession } from '../../lib/session/useSession';
 
 interface Props {
   children: ReactNode;
@@ -9,48 +10,26 @@ interface Props {
 /**
  * Guard client-side de rutas protegidas.
  *
- * Astro redirige en el middleware cuando NO hay refresh token (nada de sesión).
- * Este componente cubre los casos que el servidor no puede ver:
- * - la sesión murió en caliente (refresh rechazado → SESSION_EXPIRED_EVENT),
- * - el usuario hizo logout en otra pestaña.
+ * Las páginas son estáticas y la sesión vive en localStorage, así que el
+ * servidor no puede saber si hay sesión: la decisión es siempre del cliente.
+ * Cubre:
+ * - no hay sesión al entrar,
+ * - la sesión murió en caliente (refresh rechazado → el store se limpia),
+ * - logout en otra pestaña (evento `storage` → el store se limpia).
  *
- * Mientras resolvemos, muestra un estado de "verificando sesión".
+ * Mientras hidrata (snapshot de servidor = sin sesión), muestra
+ * "Verificando sesión…" en vez de redirigir.
  */
 export function RequireAuth({ children }: Props) {
-  const [status, setStatus] = useState<'checking' | 'authed' | 'unauthenticated'>(
-    getState().isAuthenticated ? 'authed' : 'checking',
-  );
+  const { isAuthenticated } = useSession();
 
   useEffect(() => {
-    // 1) Revisar al montar: si no hay token alguno, a /login.
-    if (!getState().isAuthenticated) {
-      window.location.assign('/login');
-      return;
-    }
-    setStatus('authed');
+    // `getState()` y no el valor del hook: en el primer commit de la
+    // hidratación el hook todavía devuelve el snapshot del servidor.
+    if (!getState().isAuthenticated) window.location.assign(loginUrl());
+  }, [isAuthenticated]);
 
-    // 2) Suscribirse a cambios: logout en otra pestaña o sesión expirada.
-    const unsubscribe = subscribe((session) => {
-      if (!session.isAuthenticated) {
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.assign(`/login?next=${next}`);
-      }
-    });
-
-    // 3) El cliente API avisa cuando una sesión murió tras un 401 + refresh fallido.
-    const onExpired = () => {
-      const next = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.assign(`/login?next=${next}`);
-    };
-    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
-
-    return () => {
-      unsubscribe();
-      window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
-    };
-  }, []);
-
-  if (status !== 'authed') {
+  if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center py-24 text-sm text-slate-400" role="status">
         Verificando sesión…
