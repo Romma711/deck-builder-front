@@ -53,7 +53,7 @@ export function errorMessage(error: unknown): string | undefined {
     if (error.code === 'VALIDATION_ERROR' && error.details && Object.keys(error.details).length > 0) {
       return undefined;
     }
-    return error.message;
+    return error.message || undefined;
   }
   if (error instanceof Error) return error.message;
   return undefined;

@@ -173,7 +173,7 @@ export function DeckDetail({ deckId, initialDeck }: Props) {
               </a>
             )}
             {deck.updated_at && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Actualizado el <LocalDate value={deck.updated_at} />
               </p>
             )}
@@ -228,7 +228,7 @@ export function DeckDetail({ deckId, initialDeck }: Props) {
               <figure key={title} className="flex flex-col gap-2">
                 <CardThumb card={card} size="lg" />
                 <figcaption className="text-sm">
-                  <span className="block text-xs uppercase tracking-wide text-slate-500">{title}</span>
+                  <span className="block text-xs uppercase tracking-wide text-slate-400">{title}</span>
                   <span className="font-medium text-slate-100">{card.name}</span>
                 </figcaption>
               </figure>
@@ -249,7 +249,7 @@ export function DeckDetail({ deckId, initialDeck }: Props) {
               <CardThumb card={entry.card} />
               <div className="min-w-0">
                 <p className="truncate text-sm text-slate-100">{entry.card.name}</p>
-                <p className="truncate text-xs text-slate-500">
+                <p className="truncate text-xs text-slate-400">
                   {[entry.card.serial_set, cardTypeLine(entry.card)].filter(Boolean).join(' · ')}
                 </p>
               </div>

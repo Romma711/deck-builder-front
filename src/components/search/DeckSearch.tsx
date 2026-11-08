@@ -79,6 +79,7 @@ export function DeckSearch() {
     const timer = window.setTimeout(() => updateFilters({ leader: leaderText.trim() }, 'replace'), LEADER_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
     // Solo reacciona al texto: `search` se lee al momento de confirmar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leaderText]);
 
   // --- Datos del usuario (opcionales: mejoran los filtros) -----------------------
@@ -171,7 +172,7 @@ export function DeckSearch() {
             />
           )}
         </div>
-        <p id="leader-hint" className="-mt-2 text-xs text-slate-500">
+        <p id="leader-hint" className="-mt-2 text-xs text-slate-400">
           El líder se busca por nombre exacto (p. ej. «Monkey.D.Luffy»).
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -305,7 +306,7 @@ function Pagination({ page, pageCount, onChange }: { page: number; pageCount: nu
       </button>
       {pages.map((p, index) => (
         <span key={p} className="flex items-center gap-1">
-          {index > 0 && p - pages[index - 1] > 1 && <span className="px-1 text-slate-500">…</span>}
+          {index > 0 && p - pages[index - 1] > 1 && <span className="px-1 text-slate-400">…</span>}
           <button
             type="button"
             aria-current={p === page ? 'page' : undefined}

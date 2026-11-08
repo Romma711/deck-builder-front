@@ -43,7 +43,7 @@ export function DeckCardList({ entries, validation, serverErrors, onQuantityChan
             value={filter}
             placeholder="Filtrar en el mazo…"
             onChange={(event) => setFilter(event.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-400 focus-visible:outline-2 focus-visible:outline-indigo-500"
           />
         </div>
       )}
@@ -73,7 +73,7 @@ export function DeckCardList({ entries, validation, serverErrors, onQuantityChan
                 <CardThumb card={entry.card} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-100">{entry.card.name}</p>
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-slate-400">
                     {[entry.card.serial_set, cardTypeLine(entry.card)].filter(Boolean).join(' · ')}
                   </p>
                 </div>

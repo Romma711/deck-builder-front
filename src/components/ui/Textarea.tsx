@@ -28,7 +28,7 @@ export function Textarea({ label, error, showCount = false, className, value, ma
         maxLength={maxLength}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className={`min-h-20 rounded-lg border bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500 ${
+        className={`min-h-20 rounded-lg border bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus-visible:outline-2 focus-visible:outline-indigo-500 ${
           error ? 'border-red-500' : 'border-slate-700'
         } ${className ?? ''}`}
       />
@@ -41,7 +41,7 @@ export function Textarea({ label, error, showCount = false, className, value, ma
           <span />
         )}
         {showCount && maxLength && (
-          <p id={countId} className="text-xs text-slate-500">
+          <p id={countId} className="text-xs text-slate-400">
             {length} / {maxLength}
           </p>
         )}

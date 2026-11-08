@@ -117,7 +117,7 @@ function DeckListContent() {
                 <a href={`/orgs/${org.id}`} className="hover:underline">
                   {org.name}
                 </a>{' '}
-                <span className="font-normal text-slate-500">({decks.length})</span>
+                <span className="font-normal text-slate-400">({decks.length})</span>
               </h3>
               <DeckGrid decks={decks} />
             </div>

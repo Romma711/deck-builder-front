@@ -60,7 +60,7 @@ function OrgListContent() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-slate-100">{org.name}</p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-slate-400">
                       {org.slug}
                       {org.created_at && (
                         <>
@@ -154,7 +154,7 @@ function CreateOrgForm() {
             setErrors((prev) => ({ ...prev, slug: undefined }));
           }}
         />
-        <p id="slug-hint" className="-mt-3 text-xs text-slate-500">
+        <p id="slug-hint" className="-mt-3 text-xs text-slate-400">
           Identificador único en URLs. Si lo dejás vacío se usa «{suggested || '…'}».
         </p>
         <Button type="submit" loading={saving}>

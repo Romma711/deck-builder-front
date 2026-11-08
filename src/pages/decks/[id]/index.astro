@@ -21,7 +21,7 @@ if (!isUuid(id)) return new Response(null, { status: 404 });
 const signal = AbortSignal.timeout(SERVER_FETCH_TIMEOUT_MS);
 const [deck, games] = await Promise.all([
   decksApi.getDeck(id, signal).catch((): Deck | null => null),
-  catalogApi.listGames().then(({ data }) => data).catch(() => []),
+  catalogApi.listGames(signal).then(({ data }) => data).catch(() => []),
 ]);
 
 const game = deck ? games.find((g) => g.code === deck.game) : undefined;

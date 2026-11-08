@@ -27,7 +27,7 @@ export function CardThumb({ card, size = 'sm' }: Props) {
     return (
       <div
         aria-hidden="true"
-        className={`${SIZES[size]} flex shrink-0 items-center justify-center bg-slate-800 text-[10px] text-slate-500`}
+        className={`${SIZES[size]} flex shrink-0 items-center justify-center bg-slate-800 text-[10px] text-slate-400`}
       >
         🃏
       </div>

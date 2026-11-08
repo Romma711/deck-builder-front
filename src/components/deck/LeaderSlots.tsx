@@ -67,7 +67,7 @@ function Slot({ title, card, error, emptyText, onClear }: SlotProps) {
           <CardThumb card={card} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-slate-100">{card.name}</p>
-            <p className="truncate text-xs text-slate-500">
+            <p className="truncate text-xs text-slate-400">
               {[card.serial_set, cardTypeLine(card)].filter(Boolean).join(' · ')}
             </p>
           </div>

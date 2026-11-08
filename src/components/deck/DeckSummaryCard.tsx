@@ -40,7 +40,7 @@ export function DeckSummaryCard({ deck, orgName }: Props) {
           <p className="w-fit rounded bg-indigo-950/60 px-2 py-0.5 text-xs text-indigo-200">🏷 {orgName}</p>
         )}
         {deck.updated_at && (
-          <p className="text-xs text-slate-500">Actualizado <LocalDate value={deck.updated_at} /></p>
+          <p className="text-xs text-slate-400">Actualizado <LocalDate value={deck.updated_at} /></p>
         )}
       </div>
     </a>

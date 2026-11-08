@@ -43,7 +43,7 @@ export function GamesCatalog() {
         >
           <div>
             <h2 className="text-lg font-semibold text-slate-100">{game.name}</h2>
-            <p className="text-xs uppercase tracking-wide text-slate-500">{game.code}</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">{game.code}</p>
           </div>
 
           {(game.formats ?? []).length === 0 ? (
@@ -56,7 +56,7 @@ export function GamesCatalog() {
                   <li key={format.code} className="flex items-center justify-between gap-3 py-2">
                     <div>
                       <p className="text-sm font-medium text-slate-200">{format.name}</p>
-                      <p className="text-xs text-slate-500">{format.code}</p>
+                      <p className="text-xs text-slate-400">{format.code}</p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end text-xs text-slate-400">
                       {size && <span>{size}</span>}

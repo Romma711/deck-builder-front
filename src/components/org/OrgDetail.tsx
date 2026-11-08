@@ -104,14 +104,14 @@ function OrgDetailContent({ orgId }: Props) {
     <div className="flex flex-col gap-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <a href="/orgs" className="text-xs text-slate-500 hover:text-slate-300">
+          <a href="/orgs" className="text-xs text-slate-400 hover:text-slate-300">
             ← Organizaciones
           </a>
           <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold text-white">
             {org.name}
             {myRole && <RoleBadge role={myRole} />}
           </h1>
-          <p className="text-sm text-slate-500">{org.slug}</p>
+          <p className="text-sm text-slate-400">{org.slug}</p>
         </div>
         <a
           href={`/decks/new?org=${org.id}`}
@@ -199,9 +199,9 @@ function MembersSection({ org, members, me, onChanged }: MembersProps) {
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-100">
                   {member.username}
-                  {isMe && <span className="ml-2 text-xs text-slate-500">(vos)</span>}
+                  {isMe && <span className="ml-2 text-xs text-slate-400">(vos)</span>}
                 </p>
-                <p className="truncate text-xs text-slate-500">
+                <p className="truncate text-xs text-slate-400">
                   {member.email}
                   {member.joined_at && (
                     <>
@@ -342,7 +342,7 @@ function AddMemberForm({ org, onAdded }: { org: Organization; onAdded: () => Pro
           Agregar
         </Button>
       </div>
-      {roles.length <= 1 && <p className="text-xs text-slate-500">Como admin solo podés sumar miembros con rol Miembro.</p>}
+      {roles.length <= 1 && <p className="text-xs text-slate-400">Como admin solo podés sumar miembros con rol Miembro.</p>}
     </form>
   );
 }

@@ -51,9 +51,9 @@ export function DeckValidationPanel({ validation, serverErrors, showFieldErrors,
       <div className="flex items-baseline justify-between gap-2">
         <p className="text-sm text-slate-300">
           <span className={`text-2xl font-bold ${sizeOk ? 'text-emerald-300' : 'text-slate-100'}`}>{size}</span>
-          {target !== undefined && <span className="text-slate-500"> / {target}</span>} cartas
+          {target !== undefined && <span className="text-slate-400"> / {target}</span>} cartas
         </p>
-        <p className="text-right text-xs text-slate-500">
+        <p className="text-right text-xs text-slate-400">
           {[sizeText, maxCopies !== undefined ? `máx. ${maxCopies} por carta` : undefined]
             .filter(Boolean)
             .join(' · ')}
