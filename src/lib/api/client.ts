@@ -8,6 +8,7 @@
  * - Ante un 401, intenta UN refresh rotatorio y reintenta la petición.
  * - Si la sesión murió en un endpoint con auth obligatoria, la limpia y
  *   dispara un evento global para que la UI mande al usuario a /login.
+ * - Las lecturas (GET) se reintentan una vez ante fallos transitorios.
  */
 
 import type { ApiErrorBody, ErrorCode, TokenPair } from '../../types/api';
@@ -105,7 +106,8 @@ async function parseError(response: Response): Promise<ApiError> {
   }
   return new ApiError(
     response.status,
-    { code: codeFromStatus(response.status), message: `Error HTTP ${response.status}` },
+    // Sin mensaje: el título por code ya lo explica; "Error HTTP 502" no le sirve al usuario.
+    { code: codeFromStatus(response.status), message: '' },
     retryAfter,
   );
 }
@@ -123,10 +125,64 @@ async function send(url: string, init: RequestOptions, body: unknown, accessToke
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch (error) {
-    // Abortos explícitos los decide el caller; no son errores de red.
-    if (error instanceof DOMException && error.name === 'AbortError') throw error;
+    // Abortos y timeouts los decide el caller; no son errores de red.
+    if (init.signal?.aborted) throw error;
     throw new ApiError(0, { code: 'NETWORK', message: 'No se pudo conectar con el servidor' });
   }
+}
+
+const RETRY_DELAY_MS = 500;
+/** Un 429 se reintenta solo si la espera es corta; si no, se le informa al usuario. */
+const MAX_RETRY_AFTER_SECONDS = 3;
+const TRANSIENT_STATUS = new Set([502, 503, 504]);
+
+/** Espera cancelable: si la petición se aborta, no reintenta. */
+function wait(ms: number, signal?: AbortSignal | null): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason);
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(signal.reason);
+      },
+      { once: true },
+    );
+  });
+}
+
+/**
+ * Milisegundos a esperar antes de reintentar la respuesta, o null si no
+ * corresponde. Solo se reintenta GET: repetir una escritura podría duplicarla.
+ */
+function retryDelay(response: Response): number | null {
+  if (TRANSIENT_STATUS.has(response.status)) return RETRY_DELAY_MS;
+  if (response.status !== 429) return null;
+  const seconds = parseRetryAfter(response.headers.get('Retry-After'));
+  return seconds !== undefined && seconds <= MAX_RETRY_AFTER_SECONDS ? seconds * 1000 : null;
+}
+
+/** `send` con un único reintento de las lecturas ante fallos transitorios. */
+async function sendWithRetry(
+  url: string,
+  init: RequestOptions,
+  body: unknown,
+  accessToken: string | null,
+): Promise<Response> {
+  if ((init.method ?? 'GET').toUpperCase() !== 'GET') return send(url, init, body, accessToken);
+
+  let delay: number | null;
+  try {
+    const response = await send(url, init, body, accessToken);
+    delay = retryDelay(response);
+    if (delay === null) return response;
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.code !== 'NETWORK') throw error;
+    delay = RETRY_DELAY_MS;
+  }
+  await wait(delay, init.signal);
+  return send(url, init, body, accessToken);
 }
 
 function expireSession(): void {
@@ -156,7 +212,7 @@ export async function request<T>(
   const url = buildUrl(path, query);
 
   const accessToken = await resolveToken(auth);
-  let response = await send(url, init, body, accessToken);
+  let response = await sendWithRetry(url, init, body, accessToken);
 
   // 401 con token enviado: el access fue rechazado (revocado o expiró antes
   // de lo previsto). Un refresh y un reintento.

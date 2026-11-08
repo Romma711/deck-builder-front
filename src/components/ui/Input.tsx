@@ -23,7 +23,7 @@ export function Input({ label, error, type = 'text', className, ...rest }: Props
         type={type}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className={`rounded-lg border bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500 ${
+        className={`rounded-lg border bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus-visible:outline-2 focus-visible:outline-indigo-500 ${
           error ? 'border-red-500' : 'border-slate-700'
         } ${className ?? ''}`}
       />

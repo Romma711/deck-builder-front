@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { orgsApi } from '../../lib/api';
 import { useCatalog } from '../../lib/catalog/useCatalog';
 import { describeError, type ErrorDescription } from '../../lib/forms/errors';
 import {
@@ -13,6 +12,7 @@ import {
   type DeckSearchResult,
   type SearchState,
 } from '../../lib/search/deckSearch';
+import { getMyOrgs } from '../../lib/org/myOrgs';
 import { getCurrentUser } from '../../lib/session/currentUser';
 import { useSession } from '../../lib/session/useSession';
 import type { Organization, User } from '../../types/api';
@@ -23,7 +23,7 @@ import { Checkbox } from '../ui/Checkbox';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 
-const LEADER_DEBOUNCE_MS = 400;
+const TEXT_DEBOUNCE_MS = 400;
 const RESULTS_ID = 'deck-search-results';
 
 type ResultState =
@@ -43,6 +43,7 @@ export function DeckSearch() {
   const [search, setSearch] = useState<SearchState | null>(null);
   const [results, setResults] = useState<ResultState>({ status: 'loading' });
   const [leaderText, setLeaderText] = useState('');
+  const [authorText, setAuthorText] = useState('');
   const [me, setMe] = useState<User | null>(null);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [retry, setRetry] = useState(0);
@@ -54,6 +55,7 @@ export function DeckSearch() {
       const parsed = parseSearchParams(window.location.search);
       setSearch(parsed);
       setLeaderText(parsed.filters.leader);
+      setAuthorText(parsed.filters.author);
     };
     fromUrl();
     window.addEventListener('popstate', fromUrl);
@@ -73,13 +75,16 @@ export function DeckSearch() {
     commit({ filters: { ...search.filters, ...patch }, page: 1 }, mode);
   }
 
-  // Texto del líder con debounce.
+  // Filtros de texto con debounce.
   useEffect(() => {
-    if (!search || leaderText.trim() === search.filters.leader) return;
-    const timer = window.setTimeout(() => updateFilters({ leader: leaderText.trim() }, 'replace'), LEADER_DEBOUNCE_MS);
+    const leader = leaderText.trim();
+    const author = authorText.trim();
+    if (!search || (leader === search.filters.leader && author === search.filters.author)) return;
+    const timer = window.setTimeout(() => updateFilters({ leader, author }, 'replace'), TEXT_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-    // Solo reacciona al texto: `search` se lee al momento de confirmar.
-  }, [leaderText]);
+    // Solo reacciona a los textos: `search` se lee al momento de confirmar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaderText, authorText]);
 
   // --- Datos del usuario (opcionales: mejoran los filtros) -----------------------
   useEffect(() => {
@@ -91,9 +96,8 @@ export function DeckSearch() {
     getCurrentUser()
       .then(setMe)
       .catch(() => setMe(null));
-    orgsApi
-      .listOrgs()
-      .then(({ data }) => setOrgs(data))
+    getMyOrgs()
+      .then(setOrgs)
       .catch(() => setOrgs([]));
   }, [isAuthenticated]);
 
@@ -159,9 +163,15 @@ export function DeckSearch() {
             label="Líder"
             type="search"
             value={leaderText}
-            placeholder="Nombre exacto"
-            aria-describedby="leader-hint"
+            placeholder="Nombre del líder"
             onChange={(event) => setLeaderText(event.target.value)}
+          />
+          <Input
+            label="Autor"
+            type="search"
+            value={authorText}
+            placeholder="Nombre de usuario"
+            onChange={(event) => setAuthorText(event.target.value)}
           />
           {orgs.length > 0 && (
             <Select
@@ -172,9 +182,6 @@ export function DeckSearch() {
             />
           )}
         </div>
-        <p id="leader-hint" className="-mt-2 text-xs text-slate-500">
-          El líder se busca por nombre exacto (p. ej. «Monkey.D.Luffy»).
-        </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           {me ? (
             <Checkbox
@@ -190,6 +197,7 @@ export function DeckSearch() {
               variant="ghost"
               onClick={() => {
                 setLeaderText('');
+                setAuthorText('');
                 commit({ filters: EMPTY_FILTERS, page: 1 });
               }}
             >
@@ -208,6 +216,7 @@ export function DeckSearch() {
         aria-busy={results.status === 'loading'}
         className="flex scroll-mt-6 flex-col gap-4 focus:outline-none"
       >
+        <h2 className="sr-only">Resultados</h2>
         <p className="text-sm text-slate-400" aria-live="polite">
           {results.status === 'loading' && 'Buscando mazos…'}
           {results.status === 'ready' && resultsSummary(results.result)}
@@ -229,6 +238,7 @@ export function DeckSearch() {
             filtered={active}
             onClear={() => {
               setLeaderText('');
+              setAuthorText('');
               commit({ filters: EMPTY_FILTERS, page: 1 });
             }}
           />
@@ -276,7 +286,7 @@ function EmptyState({ filtered, onClear }: { filtered: boolean; onClear: () => v
       </h2>
       <p className="text-sm text-slate-400">
         {filtered
-          ? 'Probá con menos filtros. Recordá que el líder se busca por nombre exacto.'
+          ? 'Probá con menos filtros o con otra parte del nombre.'
           : 'Sé la primera persona en compartir uno.'}
       </p>
       {filtered ? (
@@ -306,7 +316,7 @@ function Pagination({ page, pageCount, onChange }: { page: number; pageCount: nu
       </button>
       {pages.map((p, index) => (
         <span key={p} className="flex items-center gap-1">
-          {index > 0 && p - pages[index - 1] > 1 && <span className="px-1 text-slate-500">…</span>}
+          {index > 0 && p - pages[index - 1] > 1 && <span className="px-1 text-slate-400">…</span>}
           <button
             type="button"
             aria-current={p === page ? 'page' : undefined}

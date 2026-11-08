@@ -43,6 +43,9 @@ export function describeReason(reason: string): string {
   let match = /^max=(\d+)_copies$/.exec(value);
   if (match) return `Máximo ${match[1]} ${match[1] === '1' ? 'copia' : 'copias'} por carta`;
 
+  match = /^mismatch_cards=(\d+)$/.exec(value);
+  if (match) return `El tamaño declarado no coincide con las ${match[1]} cartas enviadas`;
+
   match = /^format_range=\[(\d+),(\d+)\]$/.exec(value);
   if (match) {
     const [, min, max] = match;
@@ -75,6 +78,10 @@ export function describeReason(reason: string): string {
       return 'Ingresá un email válido';
     case 'uuid':
       return 'Identificador inválido';
+    case 'lowercase_slug_1_50':
+      return 'Solo minúsculas, números y guiones (máx. 50)';
+    case 'unknown':
+      return 'No existe';
     case 'unsupported':
       return 'No está soportado';
     case 'unsupported_for_game':

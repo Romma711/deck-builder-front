@@ -43,7 +43,7 @@ export function DeckCardList({ entries, validation, serverErrors, onQuantityChan
             value={filter}
             placeholder="Filtrar en el mazo…"
             onChange={(event) => setFilter(event.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-400 focus-visible:outline-2 focus-visible:outline-indigo-500"
           />
         </div>
       )}
@@ -52,28 +52,22 @@ export function DeckCardList({ entries, validation, serverErrors, onQuantityChan
         {visible.map((entry) => {
           const issues = issuesForCard(validation, entry.key);
           const serverError = serverErrors[entry.key];
-          const errors = [
-            ...issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message),
-            ...(serverError ? [serverError] : []),
-          ];
-          const warnings = issues.filter((issue) => issue.severity === 'warning').map((issue) => issue.message);
-          const messages = [...errors, ...warnings];
+          const messages = [...issues.map((issue) => issue.message), ...(serverError ? [serverError] : [])];
           const errorId = `${filterId}-${entry.key}-error`;
-          const rowTone = errors.length ? 'bg-red-950/30' : warnings.length ? 'bg-amber-950/20' : '';
           return (
-            <li key={entry.key} className={`flex flex-col gap-1 p-2 ${rowTone}`}>
+            <li key={entry.key} className={`flex flex-col gap-1 p-2 ${messages.length ? 'bg-red-950/30' : ''}`}>
               <div className="flex items-center gap-3">
                 <QuantityStepper
                   name={entry.card.name}
                   value={entry.quantity}
-                  invalid={errors.length > 0}
+                  invalid={messages.length > 0}
                   describedBy={messages.length ? errorId : undefined}
                   onChange={(quantity) => onQuantityChange(entry.key, quantity)}
                 />
                 <CardThumb card={entry.card} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-100">{entry.card.name}</p>
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-slate-400">
                     {[entry.card.serial_set, cardTypeLine(entry.card)].filter(Boolean).join(' · ')}
                   </p>
                 </div>
@@ -87,10 +81,8 @@ export function DeckCardList({ entries, validation, serverErrors, onQuantityChan
                 </button>
               </div>
               {messages.length > 0 && (
-                <p id={errorId} className="pl-1 text-xs">
-                  {errors.length > 0 && <span className="text-red-300">{errors.join(' · ')}</span>}
-                  {errors.length > 0 && warnings.length > 0 && ' · '}
-                  {warnings.length > 0 && <span className="text-amber-300">⚠ {warnings.join(' · ')}</span>}
+                <p id={errorId} className="pl-1 text-xs text-red-300">
+                  {messages.join(' · ')}
                 </p>
               )}
             </li>

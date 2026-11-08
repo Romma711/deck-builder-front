@@ -16,8 +16,8 @@ export type CardsQuery = {
 };
 
 /** GET /games — juegos activos con sus formatos */
-export function listGames(): Promise<Paged<Game>> {
-  return request<Paged<Game>>('/games', { auth: 'none' });
+export function listGames(signal?: AbortSignal): Promise<Paged<Game>> {
+  return request<Paged<Game>>('/games', { auth: 'none', signal });
 }
 
 /** GET /games/{code} — un juego por código */

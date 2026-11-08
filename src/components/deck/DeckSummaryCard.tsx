@@ -6,10 +6,12 @@ import { CardThumb } from './CardThumb';
 
 interface Props {
   deck: Deck;
+  /** Nombre de la org dueña (si se conoce) para mostrarla como etiqueta */
+  orgName?: string;
 }
 
 /** Tarjeta resumen de un mazo (dashboard y buscador): enlaza a su detalle. */
-export function DeckSummaryCard({ deck }: Props) {
+export function DeckSummaryCard({ deck, orgName }: Props) {
   const catalog = useCatalog();
   const ready = catalog.status === 'ready';
   const gameName = (ready && getGameByCode(deck.game)?.name) || deck.game;
@@ -34,8 +36,12 @@ export function DeckSummaryCard({ deck }: Props) {
           {gameName} · {formatName} · {deck.deck_size} cartas
           {deck.leader ? ` · Líder: ${deck.leader.name}` : ''}
         </p>
+        {deck.owner_username && <p className="text-xs text-slate-400">por {deck.owner_username}</p>}
+        {orgName && (
+          <p className="w-fit rounded bg-indigo-950/60 px-2 py-0.5 text-xs text-indigo-200">🏷 {orgName}</p>
+        )}
         {deck.updated_at && (
-          <p className="text-xs text-slate-500">Actualizado <LocalDate value={deck.updated_at} /></p>
+          <p className="text-xs text-slate-400">Actualizado <LocalDate value={deck.updated_at} /></p>
         )}
       </div>
     </a>

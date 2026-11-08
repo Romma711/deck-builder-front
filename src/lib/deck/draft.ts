@@ -24,7 +24,7 @@ export interface DeckDraft {
   game: string;
   format: string;
   private: boolean;
-  /** Se preserva al editar; la asignación a orgs llega en la Fase 5 */
+  /** Org dueña del mazo (vacío = personal) */
   orgId?: string;
   leader?: CardInput;
   partner?: CardInput;
@@ -35,6 +35,7 @@ export type DraftAction =
   | { type: 'reset'; draft: DeckDraft }
   | { type: 'setField'; field: 'name' | 'description'; value: string }
   | { type: 'setPrivate'; value: boolean }
+  | { type: 'setOrg'; orgId: string | undefined }
   | { type: 'setGameFormat'; game: string; format: string }
   | { type: 'addCard'; card: CardInput; quantity?: number }
   | { type: 'setQuantity'; key: string; quantity: number }
@@ -62,6 +63,8 @@ export function draftReducer(draft: DeckDraft, action: DraftAction): DeckDraft {
       return action.draft;
     case 'setField':
       return { ...draft, [action.field]: action.value };
+    case 'setOrg':
+      return { ...draft, orgId: action.orgId || undefined };
     case 'setPrivate':
       return { ...draft, private: action.value };
     case 'setGameFormat': {

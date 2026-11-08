@@ -135,9 +135,9 @@ export function CardSearch({ game, allowLeader, allowPartner, onAdd, onSetLeader
               onAdd(cardToInput(enterTarget));
             }
           }}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500"
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus-visible:outline-2 focus-visible:outline-indigo-500"
         />
-        <p id={`${inputId}-hint`} className="text-xs text-slate-500">
+        <p id={`${inputId}-hint`} className="text-xs text-slate-400">
           Escribí al menos {MIN_QUERY} letras.
         </p>
       </div>
@@ -161,7 +161,7 @@ export function CardSearch({ game, allowLeader, allowPartner, onAdd, onSetLeader
                     <CardThumb card={input} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-100">{card.name}</p>
-                      <p className="truncate text-xs text-slate-500">
+                      <p className="truncate text-xs text-slate-400">
                         {[card.serial_set, cardTypeLine(input)].filter(Boolean).join(' · ')}
                       </p>
                     </div>
@@ -171,7 +171,7 @@ export function CardSearch({ game, allowLeader, allowPartner, onAdd, onSetLeader
               })}
             </ul>
             {search.total !== undefined && search.total > results.length && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Mostrando {results.length} de {search.total}. Refiná la búsqueda para ver más.
               </p>
             )}
@@ -206,7 +206,7 @@ export function CardSearch({ game, allowLeader, allowPartner, onAdd, onSetLeader
                 <CardThumb card={scryfall.card} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-100">{scryfall.card.name}</p>
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-slate-400">
                     {scryfall.card.serial_set} · datos de Scryfall
                   </p>
                 </div>

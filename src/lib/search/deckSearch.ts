@@ -3,10 +3,6 @@
  *
  * - Los filtros viven en la URL (`/search?game=mtg&format=modern&page=2`):
  *   los resultados se pueden compartir y el botón "atrás" funciona.
- * - Paginación: el backend todavía NO pagina (devuelve todo lo que
- *   coincide), así que se pagina en el cliente. Cuando el back acepte
- *   `limit`/`offset`, solo cambia `searchDecks`: la UI ya trabaja con
- *   `{ items, total, page, pageCount }`.
  * - Visibilidad: sin sesión solo hay mazos públicos; con sesión el back
  *   agrega los privados propios y de las orgs del usuario (RLS). El front no
  *   filtra visibilidad: muestra lo que devuelve el back.
@@ -20,15 +16,17 @@ export const PAGE_SIZE = 12;
 export interface DeckSearchFilters {
   game: string;
   format: string;
-  /** Nombre EXACTO del líder (el back compara con `=`) */
+  /** Subcadena del nombre del líder */
   leader: string;
+  /** Subcadena del username del autor */
+  author: string;
   /** uuid de org (solo orgs del usuario) */
   org: string;
   /** uuid del dueño ("solo mis mazos") */
   owner: string;
 }
 
-export const EMPTY_FILTERS: DeckSearchFilters = { game: '', format: '', leader: '', org: '', owner: '' };
+export const EMPTY_FILTERS: DeckSearchFilters = { game: '', format: '', leader: '', author: '', org: '', owner: '' };
 
 const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as (keyof DeckSearchFilters)[];
 
@@ -72,19 +70,20 @@ export async function searchDecks(
   page: number,
   signal?: AbortSignal,
 ): Promise<DeckSearchResult> {
-  const { data } = await listDecks(
+  const { data, meta } = await listDecks(
     {
       game: filters.game || undefined,
       format: filters.format || undefined,
       leader: filters.leader || undefined,
+      author: filters.author || undefined,
       org: filters.org || undefined,
       owner: filters.owner || undefined,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
     },
     signal,
   );
-  const total = data.length;
+  const total = meta?.total ?? data.length;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const effectivePage = Math.min(page, pageCount);
-  const start = (effectivePage - 1) * PAGE_SIZE;
-  return { items: data.slice(start, start + PAGE_SIZE), total, page: effectivePage, pageCount };
+  return { items: data, total, page: Math.min(page, pageCount), pageCount };
 }

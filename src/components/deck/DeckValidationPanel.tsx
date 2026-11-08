@@ -29,15 +29,7 @@ export function DeckValidationPanel({ validation, serverErrors, showFieldErrors,
       typeof issue.target === 'string' &&
       (showFieldErrors || (issue.target !== 'name' && issue.target !== 'description')),
   );
-  // Una carta puede repetirse en varias ediciones: se cuentan cartas distintas.
-  const cardsWith = (severity: 'error' | 'warning') =>
-    new Set(
-      issues
-        .filter((issue) => issue.severity === severity && typeof issue.target === 'object')
-        .map((issue) => (typeof issue.target === 'object' ? issue.target.cardKey : '')),
-    ).size;
-  const cardErrorCount = cardsWith('error');
-  const cardWarningCount = cardsWith('warning');
+  const cardErrorCount = issues.filter((issue) => typeof issue.target === 'object').length;
   const messages = [...deckIssues.map((issue) => issue.message), ...serverErrors];
   const sizeText = describeSize(required);
 
@@ -51,9 +43,9 @@ export function DeckValidationPanel({ validation, serverErrors, showFieldErrors,
       <div className="flex items-baseline justify-between gap-2">
         <p className="text-sm text-slate-300">
           <span className={`text-2xl font-bold ${sizeOk ? 'text-emerald-300' : 'text-slate-100'}`}>{size}</span>
-          {target !== undefined && <span className="text-slate-500"> / {target}</span>} cartas
+          {target !== undefined && <span className="text-slate-400"> / {target}</span>} cartas
         </p>
-        <p className="text-right text-xs text-slate-500">
+        <p className="text-right text-xs text-slate-400">
           {[sizeText, maxCopies !== undefined ? `máx. ${maxCopies} por carta` : undefined]
             .filter(Boolean)
             .join(' · ')}
@@ -87,12 +79,6 @@ export function DeckValidationPanel({ validation, serverErrors, showFieldErrors,
           <p className="mt-1 text-sm text-red-300">
             {cardErrorCount === 1 ? 'Hay 1 carta con problemas' : `Hay ${cardErrorCount} cartas con problemas`} (marcadas
             en la lista).
-          </p>
-        )}
-        {cardWarningCount > 0 && (
-          <p className="mt-1 text-sm text-amber-300">
-            ⚠ {cardWarningCount === 1 ? '1 carta supera' : `${cardWarningCount} cartas superan`} el límite del reglamento.
-            El servidor lo acepta, pero revisalo si vas a jugar en torneo.
           </p>
         )}
         {!validation.hasErrors && serverErrors.length === 0 && (

@@ -9,7 +9,7 @@
  * - La validación de formato la hace el backend (GameSpec) al guardar.
  */
 
-import type { Card, CardInput, Deck, DeckInput, ListMeta } from '../../types/api';
+import type { Card, CardInput, Deck, DeckInput, PagedMeta } from '../../types/api';
 import { request } from './client';
 
 export type DecksQuery = {
@@ -19,16 +19,32 @@ export type DecksQuery = {
   /** uuid de organización */
   org?: string;
   format?: string;
+  /** Subcadena del nombre del líder */
   leader?: string;
+  /** Subcadena del username del dueño */
+  author?: string;
+  /** Máximo 100; por defecto 50 */
+  limit?: number;
+  offset?: number;
 };
 
 /**
  * GET /decks — mazos visibles (públicos; con sesión, también los propios y de orgs).
- * Ojo: el backend NO pagina (devuelve todo lo que coincide) y `leader` es
- * nombre exacto. `signal` permite cancelar búsquedas viejas.
+ * Paginado. `signal` permite cancelar búsquedas viejas.
  */
-export function listDecks(query: DecksQuery = {}, signal?: AbortSignal): Promise<{ data: Deck[]; meta?: ListMeta }> {
-  return request<{ data: Deck[]; meta?: ListMeta }>('/decks', { auth: 'optional', signal }, query);
+export function listDecks(query: DecksQuery = {}, signal?: AbortSignal): Promise<{ data: Deck[]; meta?: PagedMeta }> {
+  return request<{ data: Deck[]; meta?: PagedMeta }>('/decks', { auth: 'optional', signal }, query);
+}
+
+/** Recorre todas las páginas: para vistas sin paginación (dashboard, org). */
+export async function listAllDecks(query: Omit<DecksQuery, 'limit' | 'offset'>): Promise<Deck[]> {
+  const limit = 100;
+  const decks: Deck[] = [];
+  for (;;) {
+    const { data, meta } = await listDecks({ ...query, limit, offset: decks.length });
+    decks.push(...data);
+    if (data.length < limit || decks.length >= (meta?.total ?? 0)) return decks;
+  }
 }
 
 /** POST /decks — crear mazo (personal u org; el back valida contra el GameSpec) */
