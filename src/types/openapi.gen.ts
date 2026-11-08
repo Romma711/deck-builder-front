@@ -602,7 +602,12 @@ export interface paths {
                     owner?: string;
                     org?: string;
                     format?: string;
+                    /** @description Subcadena del nombre del líder (ILIKE) */
                     leader?: string;
+                    /** @description Subcadena del username del dueño (ILIKE) */
+                    author?: string;
+                    limit?: number;
+                    offset?: number;
                 };
                 header?: {
                     Authorization?: string;
@@ -620,7 +625,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: components["schemas"]["Deck"][];
-                            meta?: components["schemas"]["ListMeta"];
+                            meta?: components["schemas"]["PagedMeta"];
                         };
                     };
                 };
@@ -1220,6 +1225,7 @@ export interface components {
         DeckInput: {
             name: string;
             description?: string;
+            /** @description Debe coincidir con las cartas enviadas (más líder/partner si el juego los cuenta) */
             deck_size: number;
             /** @example onepiece */
             game: string;
@@ -1245,6 +1251,7 @@ export interface components {
             id?: string;
             /** Format: uuid */
             owner_id?: string;
+            owner_username?: string;
             /**
              * Format: uuid
              * @description Ausente/vacío = personal

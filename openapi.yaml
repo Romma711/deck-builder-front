@@ -303,7 +303,10 @@ paths:
         - {name: owner, in: query, schema: {type: string, format: uuid}}
         - {name: org, in: query, schema: {type: string, format: uuid}}
         - {name: format, in: query, schema: {type: string}}
-        - {name: leader, in: query, schema: {type: string}}
+        - {name: leader, in: query, schema: {type: string}, description: "Subcadena del nombre del líder (ILIKE)"}
+        - {name: author, in: query, schema: {type: string}, description: "Subcadena del username del dueño (ILIKE)"}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+        - {name: offset, in: query, schema: {type: integer, minimum: 0, default: 0}}
         - name: Authorization
           in: header
           required: false
@@ -319,7 +322,7 @@ paths:
                   data:
                     type: array
                     items: {$ref: "#/components/schemas/Deck"}
-                  meta: {$ref: "#/components/schemas/ListMeta"}
+                  meta: {$ref: "#/components/schemas/PagedMeta"}
     post:
       tags: [decks]
       summary: Crear mazo (personal u org; validado por GameSpec del juego)
@@ -742,7 +745,7 @@ components:
       properties:
         name: {type: string, minLength: 3, maxLength: 50}
         description: {type: string, maxLength: 300}
-        deck_size: {type: integer, minimum: 1, maximum: 400}
+        deck_size: {type: integer, minimum: 1, maximum: 400, description: "Debe coincidir con las cartas enviadas (más líder/partner si el juego los cuenta)"}
         game: {type: string, example: onepiece}
         format: {type: string, example: starter_deck}
         org_id: {type: string, format: uuid, description: "Vacío = mazo personal"}
@@ -765,6 +768,7 @@ components:
       properties:
         id: {type: string, format: uuid}
         owner_id: {type: string, format: uuid}
+        owner_username: {type: string}
         org_id: {type: string, format: uuid, description: "Ausente/vacío = personal"}
         private: {type: boolean}
         name: {type: string}

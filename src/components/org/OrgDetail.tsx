@@ -62,10 +62,10 @@ function OrgDetailContent({ orgId }: Props) {
 
   const load = useCallback(async () => {
     try {
-      const [org, { data: members }, { data: decks }, me] = await Promise.all([
+      const [org, { data: members }, decks, me] = await Promise.all([
         orgsApi.getOrg(orgId),
         orgsApi.listMembers(orgId),
-        decksApi.listDecks({ org: orgId }),
+        decksApi.listAllDecks({ org: orgId }),
         getCurrentUser(),
       ]);
       if (!me) return; // sin sesión: RequireAuth redirige

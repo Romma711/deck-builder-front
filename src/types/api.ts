@@ -168,6 +168,7 @@ export interface DeckInput {
 export interface Deck {
   id: string; // uuid
   owner_id: string; // uuid
+  owner_username?: string;
   org_id?: string | null; // ausente/vacío = personal
   private?: boolean;
   name: string;

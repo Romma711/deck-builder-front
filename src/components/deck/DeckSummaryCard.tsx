@@ -36,6 +36,7 @@ export function DeckSummaryCard({ deck, orgName }: Props) {
           {gameName} · {formatName} · {deck.deck_size} cartas
           {deck.leader ? ` · Líder: ${deck.leader.name}` : ''}
         </p>
+        {deck.owner_username && <p className="text-xs text-slate-400">por {deck.owner_username}</p>}
         {orgName && (
           <p className="w-fit rounded bg-indigo-950/60 px-2 py-0.5 text-xs text-indigo-200">🏷 {orgName}</p>
         )}

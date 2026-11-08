@@ -38,11 +38,10 @@ async function loadDashboard(): Promise<DashboardData> {
   if (!me) return { mine: [], byOrg: [], orgNames: {} };
 
   const [mine, ...perOrg] = await Promise.all([
-    decksApi.listDecks({ owner: me.id }).then(({ data }) => data),
+    decksApi.listAllDecks({ owner: me.id }),
     ...orgs.map((org) =>
       decksApi
-        .listDecks({ org: org.id })
-        .then(({ data }) => data)
+        .listAllDecks({ org: org.id })
         // Una org que falla no debe tirar abajo todo el dashboard.
         .catch(() => [] as Deck[]),
     ),
@@ -103,7 +102,10 @@ function DeckListContent() {
           </a>
         </div>
       ) : (
-        <DeckGrid decks={data.mine} orgNames={data.orgNames} />
+        <section>
+          <h2 className="sr-only">Mazos que creaste</h2>
+          <DeckGrid decks={data.mine} orgNames={data.orgNames} />
+        </section>
       )}
 
       {data.byOrg.length > 0 && (

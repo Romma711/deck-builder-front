@@ -7,7 +7,7 @@
  *   `Leader`, `Cards`;
  * - atributos de una carta: `leader.card_type`, `partner.x`, `cards[3].mana_value`
  *   (el índice es el de `cards` en el DeckInput = orden de `entries`);
- * - reglas de copias: `cards.<Nombre de la carta>` (afecta a todas sus ediciones).
+ * - reglas de copias: `cards.<Nombre>` o, en One Piece, `cards.<número de carta>`.
  * Lo que no se pueda ubicar va a `general`, para no perder información.
  */
 
@@ -74,7 +74,8 @@ export function mapDeckServerErrors(error: unknown, entries: DraftEntry[]): Deck
     }
 
     match = CARD_NAME.exec(key);
-    const named = match ? entries.filter((entry) => entry.card.name.trim() === match![1].trim()) : [];
+    const copyKey = match?.[1].trim();
+    const named = entries.filter((entry) => entry.card.name.trim() === copyKey || entry.card.serial_set.trim() === copyKey);
     if (named.length > 0) {
       for (const entry of named) result.cards[entry.key] = append(result.cards[entry.key], message);
       continue;

@@ -164,6 +164,14 @@ export function DeckDetail({ deckId, initialDeck }: Props) {
                 <span className="ml-2 rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">🔒 Privado</span>
               )}
             </p>
+            {deck.owner_username && (
+              <a
+                href={`/search?author=${encodeURIComponent(deck.owner_username)}`}
+                className="w-fit text-xs text-slate-400 hover:underline"
+              >
+                por {deck.owner_username}
+              </a>
+            )}
             {org && (
               <a
                 href={`/orgs/${org.id}`}
